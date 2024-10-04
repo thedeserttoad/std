@@ -1,0 +1,44 @@
+{
+  "name": "S2D",
+  "version": "0.0.1",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "electron-builder"
+  },
+  "keywords": [],
+  "author": "Jamie Willson, GodKing Programmer, Lord of The Cyber-realm\nLachie Leedham, Harbinger of Death, Consumer of Lost Souls",
+  "license": "MIT",
+  "description": "",
+  "dependencies": {
+    "express": "^4.21.0",
+    "googleapis": "^144.0.0"
+  },
+  "build": {
+    "appId": "github.com/thedeserttoad/std",
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "compression": "maximum",
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Sheets 2 Dymo"
+    }
+  },
+  "devDependencies": {
+    "electron": "^32.1.2",
+    "electron-builder": "^25.0.5"
+  }
+}

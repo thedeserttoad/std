@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Print Label</title>
+    <link rel="stylesheet" href="css/label.css"></link>
+  </head>
+  <body>
+    <div id="labelContent"></div>
+    <script>
+    // Retrieve label data from localStorage
+    const labelData = JSON.parse(localStorage.getItem('labelData'));
+    const labelContent = document.getElementById('labelContent');
+
+    // Populate the label content
+    if (labelData) {
+      for (const [key, value] of Object.entries(labelData)) {
+        const p = document.createElement('p');
+        p.innerHTML = `<strong>${key}:</strong> ${value}`;
+        labelContent.appendChild(p);
+      }
+    }
+
+    // Print the label when the page loads
+    window.onload = function() {
+      window.print();
+    };
+    </script>
+  </body>
+</html>
+

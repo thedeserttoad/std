@@ -1,0 +1,19 @@
+# Ignore node_modules directory
+node_modules/
+
+# Ignore log files
+*.log
+
+# Ignore environment variables file
+.env
+
+# Ignore build directories
+dist/
+build/
+
+# Ignore OS-generated files
+.DS_Store
+Thumbs.db
+
+credentials.json
+tokens.json
