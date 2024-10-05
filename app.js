@@ -4,6 +4,8 @@ const { google } = require('googleapis');
 const bodyParser = require('body-parser');
 const fs = require('fs');
 const app = express();
+const { app: electronApp } = require('electron'); // Import the Electron app instance
+const tokensPath = path.join(electronApp.getPath('userData'), 'tokens.json');
 
 const { handleOAuthCallback } = require('./oauth');
 const { sendTokensToRenderer } = require('./oauth');
@@ -25,7 +27,7 @@ const getToken = async () => {
 };
 
 app.get('/api/access-token', (req, res) => {
-  fs.readFile(path.join(__dirname, 'tokens.json'), 'utf-8', (err, data) => {
+  fs.readFile(path.join(tokensPath), 'utf-8', (err, data) => {
     if (err) {
       return res.status(500).json({ error: 'Failed to read token file.' });
     }
@@ -68,13 +70,13 @@ oAuth2Client = fetchOAuthClient();
 const sheets = google.sheets({ version: 'v4', auth: oAuth2Client });
 
 const saveTokens = (tokens) => {
-  fs.writeFileSync('tokens.json', JSON.stringify(tokens));
+  fs.writeFileSync(path.join(tokensPath, JSON.stringify(tokens)));
 };
 // Initialize tokens variable
 let tokens = {};
 
 try {
-  const tokenData = fs.readFileSync('tokens.json'); // Read existing tokens file
+  const tokenData = fs.readFileSync(path.join(tokensPath)); // Read existing tokens file
   tokens = JSON.parse(tokenData); // Parse and assign to tokens
   oAuth2Client.setCredentials(tokens);
   console.log('Tokens loaded:', tokens);
@@ -95,7 +97,7 @@ oAuth2Client.on('tokens', (newTokens) => {
   // Ensure the tokens object is valid before writing
   if (tokens) {
     try {
-      fs.writeFileSync('tokens.json', JSON.stringify(tokens));
+      fs.writeFileSync(path.join(tokensPath, JSON.stringify(tokens)));
       console.log('Tokens saved to tokens.json');
     } catch (writeError) {
       console.error('Error writing tokens to file:', writeError);
@@ -145,7 +147,7 @@ app.get('/api/spreadsheets', async (req, res) => {
   try {
     // Load tokens from tokens.json if oAuth2Client has no credentials
     if (!oAuth2Client.credentials || !oAuth2Client.credentials.access_token) {
-      const tokens = JSON.parse(fs.readFileSync('tokens.json'));
+      const tokens = JSON.parse(fs.readFileSync(path.join(tokensPath)));
       oAuth2Client.setCredentials(tokens); // Set the credentials
     }
 

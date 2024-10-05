@@ -1,12 +1,14 @@
 // oauth.js
-const { ipcMain } = require('electron');
+const { ipcMain, app } = require('electron');
 const fs = require('fs');
 const { google } = require('googleapis');
+const path = require('path');
+const tokensPath = path.join(app.getPath('userData'), 'tokens.json');
 
 
 function fetchOAuthClient(){
     // Load OAuth2 credentials
-    const credentials = require('./credentials.json');
+    const credentials = require(path.join(__dirname, 'credentials.json'));
     const { client_id, client_secret, redirect_uris } = credentials.web;
     console.log(redirect_uris)
     const oAuth2Client = new google.auth.OAuth2(
@@ -52,7 +54,7 @@ async function handleOAuthCallback(req, res, mainWindow) {
 
         // Save tokens to file if a refresh token is present
         if (tokens.refresh_token) {
-            fs.writeFileSync('tokens.json', JSON.stringify(tokens));
+            fs.writeFileSync(tokensPath, JSON.stringify(tokens));
             console.log('Tokens saved to tokens.json');
         } else {
             console.log('No refresh token received');
@@ -61,7 +63,7 @@ async function handleOAuthCallback(req, res, mainWindow) {
         // Redirect the user to your app's main page with the access token
         res.redirect(`http://localhost:3000/?access_token=${tokens.access_token}`);
 
-        const tokensJson = require('./tokens.json');
+        const tokensJson = require(tokensPath);
         oAuth2Client.setCredentials(tokensJson);
     
         // Emit an event to close the auth window
@@ -74,7 +76,7 @@ async function handleOAuthCallback(req, res, mainWindow) {
 }
 
 const saveTokens = (tokens) => {
-    fs.writeFileSync('tokens.json', JSON.stringify(tokens));
+    fs.writeFileSync(tokensPath, JSON.stringify(tokens));
   };
   
 

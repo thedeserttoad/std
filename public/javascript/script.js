@@ -1,13 +1,42 @@
 const { jsPDF } = window.jspdf;
-const { ipcRenderer } = require('electron');
+const { ipcRenderer, remote } = require('electron');
 let globalData;
 let globalFormattedData;
 let spreadsheets = [];
 let selectedSpreadsheetId = null;
 const backgroundImg = null;
-const { printLabel } = require('./public/javascript/printLogic.js');
-const { img64 } = require("./public/images/image.js")
-const { checkAuthentication, authenticateWithGoogle } = require("./public/javascript/auth.js");
+let printLabel, img64, checkAuthentication, authenticateWithGoogle;
+
+const path = require('path');
+// Async function to require modules safely
+(async () => {
+  const appPath = await ipcRenderer.invoke('get-app-path');
+
+  try {
+    // Require printLogic.js
+    const printLogic = require(path.join(appPath, 'public', 'javascript', 'printLogic.js'));
+    printLabel = printLogic.printLabel;
+  } catch (error) {
+    console.error("Error requiring printLogic.js:", error);
+  }
+
+  try {
+    // Require image.js
+    const image = require(path.join(appPath, 'public', 'images', 'image.js'));
+    img64 = image.img64;
+  } catch (error) {
+    console.error("Error requiring image.js:", error);
+  }
+
+  try {
+    // Require auth.js
+    const auth = require(path.join(appPath, 'public', 'javascript', 'auth.js'));
+    checkAuthentication = auth.checkAuthentication;
+    authenticateWithGoogle = auth.authenticateWithGoogle;
+  } catch (error) {
+    console.error("Error requiring auth.js:", error);
+  }
+})();
 
 
 // Function to fetch available spreadsheets

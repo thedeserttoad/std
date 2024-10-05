@@ -15,7 +15,7 @@
     "express": "^4.21.0",
     "googleapis": "^144.0.0"
   },
-  "build": {
+  "build": { 
     "appId": "github.com/thedeserttoad/std",
     "win": {
       "target": [
@@ -27,7 +27,7 @@
         }
       ],
       "compression": "maximum",
-      "icon": "build/icon.ico"
+      "icon": "public/images/icon.ico"
     },
     "nsis": {
       "oneClick": false,
@@ -35,7 +35,17 @@
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
       "shortcutName": "Sheets 2 Dymo"
-    }
+    },
+    "asarUnpack": [
+      "./tokens.json"
+    ],
+     "files": [
+      "**/*",
+      "!/dist",
+      "!.gitignore",
+      "!tokens.json",
+      "!/.git"
+    ]
   },
   "devDependencies": {
     "electron": "^32.1.2",

@@ -7,7 +7,9 @@ const { v4: uuidv4 } = require('uuid'); // Import uuid for unique identifiers
 let mainWindow;
 let authWindow;
 
-
+ipcMain.handle('get-app-path', () => {
+  return app.getAppPath();
+});
 
 // Function to create a new BrowserWindow instance
 function createWindow() {
