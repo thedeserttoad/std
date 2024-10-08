@@ -99,7 +99,12 @@ body {
     /* Center items horizontally */
 }
 
+#otherSettings {
+    display: none;
+}
+
 .toggleBtn {
+    display:block;
     border: none;
     background-color: #007BFF;
     /* Change this to your preferred color */
@@ -302,3 +307,31 @@ button:hover {
 .close:hover {
     color: black;
 }
+
+.hidden {
+    display: none;
+  }
+
+#otherSettings {
+
+    display: flex;
+    flex-direction: column;
+    /* Stack items vertically */
+    width: 100%;
+    /* Set to full width of its parent */
+    padding: 10px;
+    /* Add some padding */
+    border: 1px solid #ccc;
+    /* Optional: add a border for visual separation */
+    border-radius: 5px;
+
+}
+
+#changelogContent {
+    display: flex;               /* Use flexbox for layout */
+    flex-direction: column;      /* Stack children vertically */
+    align-items: center;         /* Center items horizontally */
+    justify-content: center;     /* Center items vertically */
+    /*height: 100vh;              /* Make it full height of the viewport */
+    text-align: center;          /* Center text within the div */
+  }

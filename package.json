@@ -13,9 +13,10 @@
   "description": "",
   "dependencies": {
     "express": "^4.21.0",
-    "googleapis": "^144.0.0"
+    "googleapis": "^144.0.0",
+    "pdf-lib": "^1.17.1"
   },
-  "build": { 
+  "build": {
     "appId": "github.com/thedeserttoad/std",
     "win": {
       "target": [
@@ -39,7 +40,7 @@
     "asarUnpack": [
       "./tokens.json"
     ],
-     "files": [
+    "files": [
       "**/*",
       "!/dist",
       "!.gitignore",

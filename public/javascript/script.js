@@ -7,7 +7,20 @@ let selectedSpreadsheetId = null;
 const backgroundImg = null;
 let printLabel, img64, checkAuthentication, authenticateWithGoogle;
 
+
+document.addEventListener('DOMContentLoaded', function () {
+  const otherSettingsForm = document.getElementById('otherSettings');
+  otherSettingsForm.style.display = 'none';
+});
+
+
 const path = require('path');
+
+  // Add an event listener to the changelog button
+  changelogBtn.addEventListener('click', function () {    //Wtf does this do?
+    //window.location.href = 'changelog.html';  // Redirects to changelog page
+  });
+
 // Async function to require modules safely
 (async () => {
   const appPath = await ipcRenderer.invoke('get-app-path');
@@ -145,11 +158,43 @@ document.getElementById('rowForm').onsubmit = async (event) => {
 
   globalFormattedData = formattedData;
   console.log("Global Formatted Data Object: ", globalFormattedData);
+  // Create a new object to hold only the values 1-3 from each array
+  let partialData = {};
 
+  // Loop through the object and slice the arrays
+  for (let key in globalFormattedData) {
+      if (globalFormattedData.hasOwnProperty(key)) {
+          // Slice the first three values (index 0, 1, and 2)
+          partialData[key] = globalFormattedData[key].slice(1, 4);
+      }
+  }
+
+  // Display the sliced data in the modal
+  document.getElementById('modalData').textContent = JSON.stringify(partialData, null, 2);
+
+  console.log("Partial Data Object: ", partialData);
   // Display the formatted data in the modal
-  document.getElementById('modalData').textContent = JSON.stringify(formattedData, null, 2);
+  //document.getElementById('modalData').textContent = JSON.stringify(formattedData, null, 2);
+  // Insert the generated table HTML into the modal
+  document.getElementById('modalData').innerHTML = generateTableHTML(partialData);
   document.getElementById('modal').style.display = 'flex';
 };
+
+// Function to generate HTML table
+function generateTableHTML(data) {
+  let table = '<table border="1" style="width: 100%; border-collapse: collapse;">';
+  table += '<tr><th>Date</th><th>Name</th><th>Phone</th></tr>'; // Table header
+
+  // Loop through the data to generate table rows
+  for (let key in data) {
+      if (data.hasOwnProperty(key)) {
+          const [date, name, phone] = data[key]; // Destructure array elements
+          table += `<tr><td>${date}</td><td>${name}</td><td>${phone}</td></tr>`;
+      }
+  }
+  table += '</table>';
+  return table;
+}
 
 // Close modal function
 function closeModal() {
@@ -307,13 +352,16 @@ document.getElementById('backToSpreadsheetBtn').onclick = function () {
 document.getElementById('toggleManageButton').addEventListener('click', function () {
   const form = document.getElementById('spreadsheetForm');
   const availableForm = document.getElementById('availableSpreadsheets');
+  const otherSettingsForm = document.getElementById('otherSettings');
 
   // Toggle the visibility of the spreadsheet management form
   if (form.style.display === 'none' || form.style.display === '') {
     availableForm.style.display = 'none';
     form.style.display = 'flex'; // Show the form
-    this.textContent = 'Hide Settings'; // Update button text
+    otherSettingsForm.style.display = 'flex'; // show border
+    this.textContent = 'Back'; // Update button text
   } else {
+    otherSettingsForm.style.display = 'none'; // hide border on run
     form.style.display = 'none'; // Hide the form
     this.textContent = 'Settings'; // Update button text
     availableForm.style.display = 'flex';
@@ -331,5 +379,87 @@ function showNotification(message, duration = 3000) {
     notification.classList.add('hidden');
   }, duration);
 }
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Grab references to elements you'll work with
+  const changelogBtn = document.getElementById('changelogBtn');
+  const backBtn = document.getElementById('backBtn');
+  const settingsForm = document.getElementById('spreadsheetForm');
+  const changelogContent = document.getElementById('changelogContent');
+  const hideSettingsButton = document.getElementById('toggleManageButton');
+  const changelogButton = document.getElementById('otherSettings');
+
+  // Initially hide the changelog content and back button
+  changelogContent.style.display = 'none';
+  backBtn.style.display = 'none';
+
+  // Add an event listener to the changelog button
+  changelogBtn.addEventListener('click', function () {
+    // Hide the settings form and show the changelog
+    settingsForm.style.display = 'none';  // Hide settings
+    changelogContent.style.display = 'flex';  // Show changelog
+    backBtn.style.display = 'flex';
+    hideSettingsButton.style.display = 'none';
+    changelogButton.style.display = 'none';
+      // Show back button
+  });
+
+  // Add an event listener to the back button
+  backBtn.addEventListener('click', function () {
+    // Hide the changelog and show the settings form
+    changelogContent.style.display = 'none';  // Hide changelog
+    settingsForm.style.display = 'flex';  // Show settings
+    backBtn.style.display = 'none';  // Hide back button
+    hideSettingsButton.style.display = 'block';
+    changelogButton.style.display = 'flex';
+  });
+});
+
+// Function to fetch the changelog JSON and display it
+function loadChangelog() {
+  fetch('changelog.json') // Fetch the JSON file
+      .then(response => {
+          if (!response.ok) {
+              throw new Error('Network response was not ok');
+          }
+          return response.json(); // Parse the JSON
+      })
+      .then(data => {
+          const changelogList = document.getElementById('changelogList');
+          changelogList.innerHTML = ''; // Clear any existing content
+
+          // Iterate over the changelog items and create HTML
+          data.changelog.forEach(item => {
+              const paragraph = document.createElement('p');
+              paragraph.textContent = `Version ${item.version}: ${item.description}`;
+              changelogList.appendChild(paragraph); // Add the paragraph to the list
+          });
+      })
+      .catch(error => {
+          console.error('Error fetching changelog:', error);
+      });
+}
+
+// Call the function when the changelog button is clicked
+changelogBtn.addEventListener('click', function () {
+  // Hide the settings form
+  //settingsForm.style.display = 'none';
+
+  // Show the changelog
+  //changelogContent.style.display = 'flex';
+  
+  // Load the changelog content
+  loadChangelog();
+});
+
+// Add the back button functionality
+backBtn.addEventListener('click', function () {
+  // Hide the changelog
+  //changelogContent.style.display = 'none';
+  
+  // Show the settings form
+  //settingsForm.style.display = 'flex';
+});
+
 
 

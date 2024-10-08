@@ -1,24 +1,54 @@
 const path = require('path');
 const { ipcRenderer, shell, app } = require('electron');
+const { PDFDocument } = require('pdf-lib');
 
 const printPDF = async (pdfs) => {
   console.log("pdfs array = ", pdfs);
-  for (const pdf of pdfs) {
-    console.log("pdfs[i] = ", pdf);
-    try {
+  try {
+    // Create an array to hold the buffers for merging
+    const pdfBuffers = [];
+
+    for (const pdf of pdfs) {
+      console.log("pdfs[i] = ", pdf);
       // Generate the PDF blob
       const pdfBlob = pdf.output('blob');
 
       // Convert the blob to an array buffer
       const buffer = await pdfBlob.arrayBuffer();
 
-      // Send the PDF data to the main process for printing
-      await ipcRenderer.invoke('print-label', buffer);
-    } catch (err) {
-      console.error('Error printing label:', err);
+      // Push the buffer to the array
+      pdfBuffers.push(buffer);
     }
+
+    // Merge the PDFs
+    const mergedPdf = await mergePDFs(pdfBuffers);
+
+    // Send the merged PDF data to the main process for printing
+    await ipcRenderer.invoke('print-label', mergedPdf);
+  } catch (err) {
+    console.error('Error printing label:', err);
   }
 };
+
+async function mergePDFs(pdfArray) {
+  // Create a new PDF document
+  const mergedPdf = await PDFDocument.create();
+
+  for (const pdfBuffer of pdfArray) {
+      // Load each PDF
+      const pdfDoc = await PDFDocument.load(pdfBuffer);
+      const pages = await mergedPdf.copyPages(pdfDoc, pdfDoc.getPageIndices());
+      
+      // Add each page from the loaded PDF to the merged document
+      pages.forEach((page) => mergedPdf.addPage(page));
+  }
+
+  // Save the merged PDF to a buffer
+  const mergedPdfFile = await mergedPdf.save();
+
+  // You can then save it to the filesystem or return it as a response
+  return mergedPdfFile;
+}
 
 const printLabel = async (dataObject) => {
   console.log("DataObject in PrintLabel(): ", dataObject);
@@ -73,9 +103,9 @@ const printLabel = async (dataObject) => {
 
       const data = [
         { label: dataLabel[1], value: orderedGlobalData[0] },  // Full Name
-        { label: dataLabel[6], value: "$" + orderedGlobalData[1] },  // Quote
+        { label: dataLabel[6], value: "" + orderedGlobalData[1] },  // Quote
         { label: dataLabel[2], value: orderedGlobalData[2] },  // Contact
-        { label: dataLabel[7], value: "$" + orderedGlobalData[3] },  // Deposit
+        { label: dataLabel[7], value: "" + orderedGlobalData[3] },  // Deposit
         { label: dataLabel[3], value: orderedGlobalData[4] },  // Model
         { label: dataLabel[5], value: orderedGlobalData[5] },  // Colour
         { label: dataLabel[4], value: orderedGlobalData[6] },  // Part

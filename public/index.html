@@ -74,8 +74,10 @@
     <!-- Toggle Button for Managing Spreadsheets -->
     <button id="toggleManageButton" class="toggleBtn">Settings</button>
 
+
     <!-- Spreadsheet management form -->
     <form id="spreadsheetForm">
+
       <div id="login">
         <button id="loginBtn" class="loginBtn" type="button">Login with Google</button>
       </div>
@@ -86,6 +88,10 @@
 
     </form>
 
+    <div id="otherSettings">
+      <button type="button" id="changelogBtn">Changelog</button>
+    </div>
+  
     <form id="availableSpreadsheets">
       <!--<h4>Available Spreadsheets:</h4>-->
       <select id="spreadsheetSelect">
@@ -95,6 +101,13 @@
       <button type="button" id="confirmSpreadsheetBtn">Confirm</button>
     </form>
   </div>
+
+  <div id="changelogContent" class="hidden">
+    <h1>Changelog</h1>
+    <div id="changelogList"></div> <!-- This will hold the changelog items -->
+    <button id="backBtn">Back</button>
+</div>
+
 
   <!-- Initially hidden row input form -->
   <div id="formContainer" style="display: none;">
