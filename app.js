@@ -26,6 +26,18 @@ const getToken = async () => {
   }
 };
 
+app.get('/api/isLogged', (req, res) => {
+  console.log("Reached /isLogged");
+  let isLogged = false;
+  //token = getToken();
+  if (!token) {
+    console.log("No token at /api/isLogged");
+  } else {
+    isLogged = true;
+  }
+  return isLogged;
+});
+
 app.get('/api/access-token', (req, res) => {
   fs.readFile(path.join(tokensPath), 'utf-8', (err, data) => {
     if (err) {
@@ -138,8 +150,10 @@ app.get('/oauth2callback', async (req, res) => {
 app.get('/isAuthenticated', (req, res) => {
   if (tokens && tokens.access_token) {
     res.json({ isAuthenticated: true });
+    console.log("User Authenticated");
   } else {
     res.json({ isAuthenticated: false });
+    console.log("User NOT Authenticated");
   }
 });
 
@@ -157,13 +171,16 @@ app.get('/api/spreadsheets', async (req, res) => {
       return res.status(401).json({ error: 'User not authenticated' });
     }
 
-    console.log('OAuth2 Client credentials:', oAuth2Client.credentials); // Log the credentials
+
+    //console.log('OAuth2 Client credentials:', oAuth2Client.credentials); // Log the credentials
     const spreadsheets = await listUserSpreadsheets(oAuth2Client);
     res.json(spreadsheets);
   } catch (error) {
-    console.error('Error fetching spreadsheets:', error); // Log the error
-    console.error('OAuth2 Client credentials at error:', oAuth2Client.credentials); // Check credentials on error
-    console.error('OAuth2 Client details:', oAuth2Client); // Log the whole client object for more details
+    //console.error('Error fetching spreadsheets:', error); // Log the error
+    //console.error('OAuth2 Client credentials at error:', oAuth2Client.credentials); // Check credentials on error
+    //console.error('OAuth2 Client details:', oAuth2Client); // Log the whole client object for more details
+    console.log("ERROR BABY");
+    //console.error('Full API error response:', error.response ? error.response.data : error);
     res.status(500).json({ error: 'Error fetching spreadsheets', details: error.message });
   }
 });
@@ -175,10 +192,14 @@ async function listUserSpreadsheets(auth) {
       q: "mimeType='application/vnd.google-apps.spreadsheet'",
       fields: 'files(id, name)',
     });
-    console.log('Drive API response:', response.data); // Log the response
-    return response.data.files || [];
+    //console.log('Drive API response:', response.data); // Log the response
+    const partialName = 'Orders 20'; // Filter String
+    const filteredSheets = response.data.files.filter(sheet => sheet.name.includes(partialName));
+    
+    return filteredSheets || [];
   } catch (error) {
-    console.error('The API returned an error: ' + error.message);
+    console.log("BIG ERROR HERE");
+    //console.error('The API returned an error: ' + error.message);
     throw error;
   }
 }
@@ -197,7 +218,7 @@ async function getRowData(token, spreadsheet, range) {
       },
     });
 
-    console.log('Response Status:', response.status);
+    //console.log('Response Status:', response.status);
 
     if (!response.ok) {
       throw new Error('Failed to fetch Google Sheets data');
@@ -249,15 +270,15 @@ app.post('/getRow', async (req, res) => {
   }
 
   let ranges = [];
-  if (rowIndex.includes(':')) {
-    const [start, end] = rowIndex.split(':').map(num => parseInt(num, 10));
+  if (rowIndex.includes('-')) {
+    const [start, end] = rowIndex.split('-').map(num => parseInt(num, 10));
     if (isNaN(start) || isNaN(end) || start < 1 || end < 1) {
       return res.status(400).json({ error: 'Invalid row index range.' });
     }
     for (let i = start; i <= end; i++) {
       ranges.push(`${month}!A${i}:Z${i}`);
     }
-  } else if (rowIndex.includes(',')) {
+  } else if (rowIndex.includes(',') || rowIndex.includes(', ')) {
     // Handle specific rows input (e.g., 5,7,8,10,14)
     const specificRows = rowIndex.split(',').map(num => parseInt(num.trim(), 10)).filter(num => !isNaN(num));
 
