@@ -17,8 +17,9 @@ function createWindow() {
     width: 750,
     height: 900,
     webPreferences: {
-      nodeIntegration: true,
-      contextIsolation: false
+      preload: path.join(__dirname, 'preload.js'), // Ensure you have a preload script
+      nodeIntegration: true,  
+      contextIsolation: false,  // Enable context isolation
     }
   });
 
@@ -103,6 +104,10 @@ ipcMain.handle('print-label', async (event, pdfData) => {
   }
 });
 
+// Respond to IPC request with app path
+ipcMain.handle('getAppPath', () => {
+  return app.getAppPath();  // This will be sent to the renderer
+});
 
 // Quit the app when all windows are closed
 app.on('window-all-closed', () => {
