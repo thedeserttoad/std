@@ -1,30 +1,269 @@
 const { jsPDF } = window.jspdf;
 const { ipcRenderer, remote } = require('electron');
+const { checks } = require('googleapis/build/src/apis/checks');
 let globalData;
 let globalFormattedData;
 let spreadsheets = [];
 let selectedSpreadsheetId = null;
 const backgroundImg = null;
 let printLabel, img64, checkAuthentication, authenticateWithGoogle;
+var inRowForm = false;
+let isSignedIn = false;
+var fromSheetSelection = false;
+const defaultFrontPageHeight = '340px';
+const defaultWidth = '280px';
+const defaultSettingsPageHeight = '490px';
 
+
+
+let windowHeight = window.height;
+let windowWidth = window.width;
 
 document.addEventListener('DOMContentLoaded', function () {
   const otherSettingsForm = document.getElementById('otherSettings');
-  otherSettingsForm.style.display = 'none';
+  otherSettingsForm.style.display = 'none';  
+   ;
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  UpdateAccountStatus();
+    UpdateSpreadsheets();
+});
+
+function fadeIn(button) {
+    button.style.display = 'flex'; // Make the button visible
+    button.classList.remove('fade-out'); // Remove fade-out class if it exists
+    button.classList.add('fade-in'); // Add fade-in class
+
+    setTimeout(() => {
+        button.classList.remove('fade-in'); // Reset for future use
+    }, 500);
+}
+
+function fadeOut(button) {
+    button.classList.remove('fade-in'); // Remove fade-in class
+    button.classList.add('fade-out'); // Add fade-out class
+
+    // Hide the button after the animation completes
+    setTimeout(() => {
+        button.style.display = 'none';
+    }, 500); // Match this to your animation duration
+}
+
+function animateBackground(ctx, pattern, canvas) {
+  let offsetX = -50; // Initial X offset for scrolling
+  const speed = 1;  // Speed of the background movement
+
+  function draw() {
+    // Clear the canvas for each frame to prevent overlap
+    ctx.clearRect(0, 0, screen.width * 2, canvas.height);
+
+    // Save the context state before applying translation
+    ctx.save();
+
+    // Apply translation to create the scrolling effect
+    ctx.translate(offsetX, 0);
+    ctx.fillStyle = '#cce6ff';
+    ctx.fillRect(offsetX, 0, screen.width*2, canvas.height);
+    ctx.fillRect(offsetX + (screen.width * 2), 0, screen.width*2, canvas.height);
+
+    // Fill the entire canvas with the background pattern
+    ctx.fillStyle = pattern;
+    // Draw two patterns side by side to create the loop
+    ctx.fillRect(offsetX, 0, screen.width * 2, canvas.height); // First pattern
+    ctx.fillRect(offsetX + (screen.width * 2), 0, screen.width * 2, canvas.height); // First pattern
+
+    // Restore the context state
+    ctx.restore();
+
+    // Update the X offset to create scrolling motion
+    offsetX -= speed;
+
+    // Reset the offset to prevent it from becoming too large (looping the pattern)
+    if (offsetX <= -screen.width + 95) {
+      offsetX = 0;
+    }
+
+    // Request the next animation frame
+    requestAnimationFrame(draw);
+  }
+
+  // Start the animation loop
+  requestAnimationFrame(draw);
+}
+
+window.addEventListener('resize', function() {
+  if (window.innerWidth <= 600) {
+      window.resizeTo(650, window.innerWidth);
+      windowWidth = window.width;
+  }
+  if (window.innerHeight <= 850) {
+      window.resizeTo(window.innerHeight, 900);
+      windowHeight = window.height;
+  }
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Import the image data from image.js
+  const backgroundImgPath = require('./public/images/image.js'); // Adjust the path as needed
+  const img = backgroundImgPath.img64; // Access the Base64 string
+
+  // Get the canvas element
+  const canvas = document.getElementById('backgroundCanvas');
+  const ctx = canvas.getContext('2d');
+
+  const image = new Image();
+  image.src = img; // Load the Base64 image
+
+  let pattern; // Declare the pattern variable outside to use later
+
+  function resizeCanvas() {
+    // Set the canvas width and height to match the window size
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    // Fill the background with a solid color before applying the pattern
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#cce6ff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // If the pattern is already created, fill the canvas with it
+    if (pattern) {
+      ctx.fillStyle = pattern;
+      ctx.fillRect(0, 0, canvas.width * 2, canvas.height);
+      animateBackground(ctx, pattern, canvas);
+    }
+  }
+
+  image.onload = function () {
+    // Define the cropping rectangle (adjust these values based on your needs)
+    const sourceX = 160; // Starting x position for cropping
+    const sourceY = 60; // Starting y position for cropping
+    const sourceWidth = image.width - 320; // Width of the cropped area
+    const sourceHeight = image.height - 80; // Height of the cropped area
+
+    const scaleFactor = 0.5; // Change this to scale the image (e.g., 0.5 for half size)
+
+    // Create a temporary canvas for pixel manipulation
+    const tempCanvas = document.createElement('canvas');
+    const tempCtx = tempCanvas.getContext('2d');
+
+    // Set the temporary canvas to the desired size after scaling
+    tempCanvas.width = sourceWidth * scaleFactor; // Set to scaled width
+    tempCanvas.height = sourceHeight * scaleFactor; // Set to scaled height
+
+    // Draw the cropped and scaled image on the temporary canvas
+    tempCtx.drawImage(image, sourceX, sourceY, sourceWidth, sourceHeight,
+      0, 0, tempCanvas.width, tempCanvas.height); // Draw to scaled size
+
+    // Get image data from the temporary canvas and modify the pixels
+    const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+    const data = imageData.data;
+
+    // Function to check if a pixel is transparent
+    function isTransparent(data, width, height, x, y) {
+      const index = (y * width + x) * 4;
+      return data[index + 3] === 0; // Check if alpha is 0 (transparent)
+    }
+
+    // Pixel modification loop
+    for (let y = 0; y < tempCanvas.height; y++) {
+      for (let x = 0; x < tempCanvas.width; x++) {
+        const index = (y * tempCanvas.width + x) * 4;
+
+        // Check for non-white pixel
+        if (data[index] !== 255 || data[index + 1] !== 255 || data[index + 2] !== 255) {
+          // Check surrounding pixels (up, down, left, right)
+          let hasTransparentNeighbor = false;
+
+          // Check up
+          if (y > 0 && isTransparent(data, tempCanvas.width, tempCanvas.height, x, y - 1)) {
+            hasTransparentNeighbor = true;
+          }
+          // Check down
+          if (y < tempCanvas.height - 1 && isTransparent(data, tempCanvas.width, tempCanvas.height, x, y + 1)) {
+            hasTransparentNeighbor = true;
+          }
+          // Check left
+          if (x > 0 && isTransparent(data, tempCanvas.width, tempCanvas.height, x - 1, y)) {
+            hasTransparentNeighbor = true;
+          }
+          // Check right
+          if (x < tempCanvas.width - 1 && isTransparent(data, tempCanvas.width, tempCanvas.height, x + 1, y)) {
+            hasTransparentNeighbor = true;
+          }
+
+          // If any surrounding pixel is transparent, set the current pixel to black
+          if (hasTransparentNeighbor) {
+            data[index] = 0;     // Set red to 0
+            data[index + 1] = 0; // Set green to 0
+            data[index + 2] = 0; // Set blue to 0
+            data[index + 3] = 255;
+            // alpha remains unchanged
+          } 
+        } else {
+          // If the pixel is white, make it transparent
+          data[index + 3] = 0; // Set alpha to 0 for white pixels
+        }
+      }
+    }
+
+    // Set the temporary canvas to the desired size after scaling
+    tempCanvas.width = sourceWidth * scaleFactor; // Set to scaled width
+    tempCanvas.height = sourceHeight * scaleFactor; // Set to scaled height
+    
+    // Put modified image data back to the temporary canvas
+    tempCtx.putImageData(imageData, 0, 0);
+
+    pattern = ctx.createPattern(tempCanvas, 'repeat'); // Create repeat pattern
+
+    // Draw the initial canvas
+    resizeCanvas();
+  };
+
+  // Adjust canvas viewport when window resizes
+  window.addEventListener('resize', resizeCanvas);
+
+  console.log('Image Source:', img); // Optional: log to verify
 });
 
 
-const path = require('path');
+async function UpdateAccountStatus() {
+  console.log("Reached update function");
+  setStatus();
+}
 
-  // Add an event listener to the changelog button
-  changelogBtn.addEventListener('click', function () {    //Wtf does this do?
-    //window.location.href = 'changelog.html';  // Redirects to changelog page
-  });
+async function isLoggedIn() {
+  try {
+    const response = await fetch('/api/isAuthenticated');
+    console.log(response);
+  } catch {
+    console.log("Some error", error);
+  }
+}
+
+async function setStatus() {
+  const accountStatus = document.getElementById('accountStatus');
+  
+  if (!isSignedIn) {
+    const status = await checkAuthentication();
+    console.log("Status = ", status);
+    if (status != null) {
+      console.log("Account Signed In")
+      accountStatus.innerHTML = 'Account Status: <span style="color: green;">Signed In</span>';
+    }
+  } else {
+    console.log("Account not Signed in")
+    accountStatus.innerHTML = 'Account Status: <span style="color: red;">Not Signed In</span>';
+  }
+}
+
+const path = require('path');
 
 // Async function to require modules safely
 (async () => {
   const appPath = await ipcRenderer.invoke('get-app-path');
-
+  //const appPath = await window.electronAPI.getAppPath();
   try {
     // Require printLogic.js
     const printLogic = require(path.join(appPath, 'public', 'javascript', 'printLogic.js'));
@@ -61,6 +300,7 @@ async function fetchAvailableSpreadsheets(access_token) {
       },
     });
 
+    //console.log(response);
     if (!response.ok) {
       throw new Error(`HTTP error! Status: ${response.status}`);
     }
@@ -90,6 +330,7 @@ async function fetchAvailableSpreadsheets(access_token) {
     console.error('Error fetching spreadsheets:', error);
   }
 }
+
 // On form submit, fetch row data
 document.getElementById('rowForm').onsubmit = async (event) => {
   event.preventDefault();
@@ -99,8 +340,8 @@ document.getElementById('rowForm').onsubmit = async (event) => {
   const rowIndexInt = parseInt(rowIndex, 10);
 
   // Check if the rowIndex input is valid
-  if (!rowIndex || (isNaN(rowIndexInt) && !rowIndex.includes(':'))) {
-    showNotification('Please enter a valid row number or range (e.g., "3" or "3:10").');
+  if (!rowIndex || (isNaN(rowIndexInt) && !rowIndex.includes('-'))) {
+    showNotification('Please enter a valid row number or range (e.g., "3" or "3-10").');
     return;
   }
 
@@ -233,9 +474,11 @@ document.getElementById('loginBtn').onclick = async function () {
     console.log('Sending open-auth-window event with URL:', authUrl);
 
     ipcRenderer.send('open-auth-window', authUrl);  // Send event to open the auth window
+//    window.electronAPI.openAuthWindow(authUrl);  
 
     // Wait for the authentication callback
     ipcRenderer.on('oauth-callback', (event, callbackUrl) => {
+    //window.electronAPI.onOAuthCallback((callbackURL) => {  
       console.log('Received OAuth callback URL:', callbackUrl);
       // Now you can handle the URL and extract the authorization code if needed
     });
@@ -267,6 +510,11 @@ document.getElementById('addSpreadsheetBtn').onclick = async function () {
   }
 };
 
+async function UpdateSpreadsheets() {
+  const status = await checkAuthentication();
+  fetchAvailableSpreadsheets(status);
+}
+
 function updateSpreadsheetDropdown() {
   const dropdown = document.getElementById('spreadsheetSelect');
   dropdown.innerHTML = '<option value="">Select a spreadsheet</option>';
@@ -292,6 +540,10 @@ function loadSpreadsheetsFromStorage() {
 document.getElementById('confirmSpreadsheetBtn').onclick = function () {
   const selectedDropdown = document.getElementById('spreadsheetSelect');
   const selectedId = selectedDropdown.value; // Get the ID from the dropdown
+  const formContainer = document.getElementById('formContainer');
+  const content = document.querySelector('.content');
+  const formRect = content.getBoundingClientRect();
+  const contentBackground = document.getElementById('contentBackground');
 
   // Check if a spreadsheet is selected
   if (selectedId) {
@@ -299,23 +551,38 @@ document.getElementById('confirmSpreadsheetBtn').onclick = function () {
 
     // Find the spreadsheet object that matches the selected ID
     const selectedSpreadsheet = spreadsheets.find(spreadsheet => spreadsheet.id === selectedId);
-
+    
     if (selectedSpreadsheet) {
+      fromSheetSelection = true;
       const spreadsheetId = selectedSpreadsheet.id; // Get the ID from the selected object
       selectedSpreadsheetId = spreadsheetId; // Store the selected spreadsheet ID
       console.log(`Selected Spreadsheet: ${selectedSpreadsheet.name}, ID: ${spreadsheetId}`);
+      //inRowForm = true;
 
+      
       // Hide the available spreadsheets form
       document.getElementById('availableSpreadsheets').style.display = 'none';
       document.getElementById('spreadsheetForm').style.display = 'none'; // Hide the spreadsheet form
       document.getElementById('footer').style.display = 'none';
-      document.getElementById('formContainer').style.display = 'block'; // Show the row form
-
+      
       // Hide the Manage Spreadsheets button
       document.getElementById('toggleManageButton').style.display = 'none';
+            
+      // Set the height and width of contentBackground based on formContainer's dimensions
+      contentBackground.style.height = (formRect.height + 150) + 'px';  // Add 'px'
+      contentBackground.style.width = (formRect.width + 100) + 'px';    // Add 'px'
+
+      // Get the window's height and set the top position of contentBackground
+      const windowHeight = window.innerHeight;
+      contentBackground.style.top = (windowHeight / 2) - (formRect.height); // + (formRect.height / 4)) + 'px';  // Center it vertically
+      //contentBackground.style.top = '-5%';
+      fadeIn(formContainer);
+      document.getElementById('formContainer').style.display = 'flex'; // Show the row form
+        
+      fadeIn(backBtn); 
 
       // Hide header
-      document.getElementById('header').style.display = 'none';
+      //document.getElementById('header').style.display = 'none';
     } else {
       showNotification('Selected spreadsheet not found.');
     }
@@ -326,6 +593,10 @@ document.getElementById('confirmSpreadsheetBtn').onclick = function () {
 
 // Back to Spreadsheet Button Click Handler
 document.getElementById('backToSpreadsheetBtn').onclick = function () {
+  contentBackground.style.height = defaultFrontPageHeight;
+  contentBackground.style.width = defaultWidth;
+  contentBackground.style.top = '-28%';
+
   // Hide the row form
   document.getElementById('formContainer').style.display = 'none';
 
@@ -337,7 +608,7 @@ document.getElementById('backToSpreadsheetBtn').onclick = function () {
   document.getElementById('header').style.display = 'flex';
   document.getElementById('footer').style.display = 'flex';
   // Show the Manage Spreadsheets button again
-  document.getElementById('toggleManageButton').style.display = 'inline-block';
+  document.getElementById('toggleManageButton').style.display = 'flex';
 
   // Clear the spreadsheet selection dropdown and reset its state if necessary
   document.getElementById('spreadsheetSelect').selectedIndex = 0; // Reset dropdown to the first option
@@ -350,22 +621,54 @@ document.getElementById('backToSpreadsheetBtn').onclick = function () {
 };
 
 document.getElementById('toggleManageButton').addEventListener('click', function () {
+  const contentBackground = document.getElementById("contentBackground")
   const form = document.getElementById('spreadsheetForm');
   const availableForm = document.getElementById('availableSpreadsheets');
   const otherSettingsForm = document.getElementById('otherSettings');
+  const featuresBtn = document.getElementById('featuresBtn');
 
   // Toggle the visibility of the spreadsheet management form
   if (form.style.display === 'none' || form.style.display === '') {
+    contentBackground.style.top = '-28%';
+    contentBackground.style.height = defaultSettingsPageHeight;
     availableForm.style.display = 'none';
-    form.style.display = 'flex'; // Show the form
     otherSettingsForm.style.display = 'flex'; // show border
+    featuresBtn.style.display = 'flex';
     this.textContent = 'Back'; // Update button text
+    fadeIn(form);
+     ;
+
+    fadeIn(otherSettingsForm);
+    form.style.display = 'flex';
+    otherSettingsForm.style.display = 'flex';
+     ;
+
+
   } else {
+    contentBackground.style.height = defaultFrontPageHeight;
+    contentBackground.style.top = '-40%';
     otherSettingsForm.style.display = 'none'; // hide border on run
     form.style.display = 'none'; // Hide the form
-    this.textContent = 'Settings'; // Update button text
+    this.textContent = 'Settings';
+    fadeIn(availableForm);
     availableForm.style.display = 'flex';
+     ;
+
   }
+});
+
+document.getElementById('toggleManageButton').addEventListener('click', function () {
+
+    fadeIn(this);
+     
+});
+
+document.getElementById("refreshButton").addEventListener('click', async function(event) {
+  event.preventDefault(); // Prevent the default form submission
+  console.log("Refreshed!");
+//  await isLoggedIn();
+    await UpdateSpreadsheets();
+//    await UpdateAccountStatus();
 });
 
 function showNotification(message, duration = 3000) {
@@ -383,35 +686,184 @@ function showNotification(message, duration = 3000) {
 document.addEventListener('DOMContentLoaded', function () {
   // Grab references to elements you'll work with
   const changelogBtn = document.getElementById('changelogBtn');
+  const border = document.getElementById('otherSettings');
+  const changelogBackBtn = document.getElementById('changelogBackBtn');
   const backBtn = document.getElementById('backBtn');
   const settingsForm = document.getElementById('spreadsheetForm');
   const changelogContent = document.getElementById('changelogContent');
   const hideSettingsButton = document.getElementById('toggleManageButton');
-  const changelogButton = document.getElementById('otherSettings');
+  const featuresBtn = document.getElementById('featuresBtn');
+  const featuresFromRowFormBtn = document.getElementById('rowFormFeaturesBtn')
+  const betaText = document.getElementById('footer');
+  const featuresContent = document.getElementById('featuresContent');
+  const contentBackground = document.getElementById('contentBackground');
+  const formContainer = document.getElementById('formContainer');
 
   // Initially hide the changelog content and back button
   changelogContent.style.display = 'none';
   backBtn.style.display = 'none';
 
+  const defaultFrontPageHeight = '340px';
+  const defaultWidth = '280px';
+  const defaultSettingsPageHeight = '490px';
+
+
   // Add an event listener to the changelog button
   changelogBtn.addEventListener('click', function () {
+    const footer = document.getElementById('footer');
+
     // Hide the settings form and show the changelog
-    settingsForm.style.display = 'none';  // Hide settings
-    changelogContent.style.display = 'flex';  // Show changelog
-    backBtn.style.display = 'flex';
+    footer.style.display = 'none';
+    border.style.display = 'none';
+    featuresBtn.style.display = 'none';
+    settingsForm.style.display = 'none'; // Hide settings
+    
+    contentBackground.style.height = '360px';
+    contentBackground.style.width = '500px';
+    contentBackground.style.top = '-63%';
+
+
+    fadeIn(changelogContent);
+    changelogContent.style.display = 'flex'; // Show changelog
+     
+    fadeIn(changelogBackBtn); 
+    
+    changelogBackBtn.style.display = 'flex';
     hideSettingsButton.style.display = 'none';
-    changelogButton.style.display = 'none';
-      // Show back button
+    changelogBtn.style.display = 'none';
+    betaText.style.display = 'none';
+     
+      
   });
+
+  changelogBackBtn.addEventListener('click', function() { 
+      // Hide the changelog and show the settings form
+      
+      contentBackground.style.height = defaultSettingsPageHeight;
+      contentBackground.style.width = defaultWidth;
+      contentBackground.style.top = '-28%';
+      
+      border.style.display = 'flex';
+       
+
+      fadeIn(changelogBtn);
+      changelogBtn.style.display = 'flex';
+      changelogContent.style.display = 'none';  // Hide changelog
+       
+
+      fadeIn(settingsForm);
+      settingsForm.style.display = 'flex'; // Show settings
+      backBtn.style.display = 'none';  // Hide back button
+      featuresContent.style.display = 'none';
+       
+
+      fadeIn(featuresBtn);
+       
+
+      fadeIn(betaText);
+      betaText.style.display = 'flex';
+       
+
+      fadeIn(hideSettingsButton);
+      hideSettingsButton.style.display = 'flex';
+       
+  });
+
+
+
 
   // Add an event listener to the back button
   backBtn.addEventListener('click', function () {
+    if(inRowForm) {
+      featuresContent.style.display = 'none';
+      document.getElementById('formContainer').style.display = 'flex'; // Show the row form
+      inRowForm = false;
+    }
+        
+    else {
+      // Hide the changelog and show the settings form
+      contentBackground.style.width = defaultWidth;
+      contentBackground.style.height = defaultSettingsPageHeight;
+      contentBackground.style.top = '-28%';
+
+      border.style.display = 'flex';
+      changelogContent.style.display = 'none';  // Hide changelog
+      
+      fadeIn(settingsForm);  // Show settings
+      settingsForm.style.display = 'flex';
+      backBtn.style.display = 'none';  // Hide back button
+      featuresContent.style.display = 'none';
+      hideSettingsButton.style.display = 'flex';
+       
+      
+      fadeIn(featuresBtn);
+      featuresBtn.style.display = 'flex';
+       
+      
+      fadeIn(changelogBtn);
+      changelogBtn.style.display = 'flex';
+      
+      fadeIn(betaText);
+      betaText.style.display = 'flex';
+       
+      
+      fadeIn(hideSettingsButton);
+      hideSettingsButton.style.display = 'flex';
+       
+    }
+  });
+
+  featuresFromRowFormBtn.addEventListener('click', function() {
+    inRowForm = true;
+    openFeatures();
+  });
+  
+
+  function backToSettings() {
+
     // Hide the changelog and show the settings form
     changelogContent.style.display = 'none';  // Hide changelog
     settingsForm.style.display = 'flex';  // Show settings
     backBtn.style.display = 'none';  // Hide back button
-    hideSettingsButton.style.display = 'block';
-    changelogButton.style.display = 'flex';
+    featuresContent.style.display = 'none';
+    hideSettingsButton.style.display = 'flex';
+    changelogBtn.style.display = 'flex';
+    featuresBtn.style.display = 'flex';
+    betaText.style.display = 'flex';
+
+  }
+
+  function openFeatures() {
+    document.getElementById('formContainer').style.display = 'none'; // Show the row form    
+    settingsForm.style.display = 'none';  // Hide settings
+    changelogContent.style.display = 'none';  // Show changelog
+    featuresContent.style.display = 'flex';
+    backBtn.style.display = 'flex';
+    hideSettingsButton.style.display = 'none';
+      changeLogBtnStyle.style.display = 'none';
+    betaText.style.display = 'none';
+  }
+
+  featuresBtn.addEventListener('click', function () {
+      contentBackground.style.height = '505px';
+      contentBackground.style.width = '500px';
+      contentBackground.style.top = '-38%';
+      border.style.display = 'none';
+      settingsForm.style.display = 'none';  // Hide settings
+      changelogContent.style.display = 'none';  // Show changelog
+
+      fadeIn(featuresContent);
+      featuresContent.style.display = 'flex';
+        
+
+      fadeIn(backBtn);
+      backBtn.style.display = 'flex';
+      hideSettingsButton.style.display = 'none';
+      featuresBtn.style.display = 'none';
+      changelogBtn.style.display = 'none';
+      betaText.style.display = 'none';
+        
+
   });
 });
 
@@ -428,38 +880,64 @@ function loadChangelog() {
           const changelogList = document.getElementById('changelogList');
           changelogList.innerHTML = ''; // Clear any existing content
 
-          // Iterate over the changelog items and create HTML
-          data.changelog.forEach(item => {
-              const paragraph = document.createElement('p');
-              paragraph.textContent = `Version ${item.version}: ${item.description}`;
-              changelogList.appendChild(paragraph); // Add the paragraph to the list
-          });
+          const item = data.changelog[0];
+          const paragraph = document.createElement('p');
+          paragraph.innerHTML = `<strong>Version ${item.version}:</strong> ${item.description}`;
+          changelogList.appendChild(paragraph);
       })
       .catch(error => {
           console.error('Error fetching changelog:', error);
       });
 }
-
 // Call the function when the changelog button is clicked
 changelogBtn.addEventListener('click', function () {
-  // Hide the settings form
-  //settingsForm.style.display = 'none';
-
-  // Show the changelog
-  //changelogContent.style.display = 'flex';
-  
-  // Load the changelog content
   loadChangelog();
 });
 
-// Add the back button functionality
-backBtn.addEventListener('click', function () {
-  // Hide the changelog
-  //changelogContent.style.display = 'none';
+async function ResizeContent() {
+  const background = document.getElementById('contentBackground');
+  const content = document.querySelector('.content');
+  const header = document.getElementById('header');
   
-  // Show the settings form
-  //settingsForm.style.display = 'flex';
-});
+  const headerHeight = header.offsetHeight;
+  const headerWidth = header.offsetWidth;
+  const headerX = header.offsetX;
+  const headerY = header.offsetY;
+
+  const contentHeight = content.offsetHeight;
+  const contentWidth = content.offsetWidth;
+  const contentX = content.offsetX;
+  const contentY = content.offsetY;
+
+  const newWidth = 0;
+  const newHeight = 0;
+  const newX = 0;
+  const newY = 0;
+
+  /* SET NEW HEIGHT/WIDTH FOR CONTENT*/
+
+  if (content.offsetWidth < header.offsetWidth) {
+    newWidth = (window.innerWidth / 2)
+                      - (content.offsetWidth)
+                      + 50;
+  } else {
+    newWidth =  (window.innerWidth / 2)
+                - (header.offsetWidth);
+  }
+
+  newHeight = (window.innerHeight / 2)
+              - (contentHeight)
+              - (headerHeight / 2);
+
+
+  /* SET NEW X, Y COORDS FOR CONTENT */
+
+  // Apply the calculated height to the content element
+  background.style.height = newHeight + 'px';
+  background.style.width = newWidth + 'px';
+
+  background.style.transform.translateX 
+}
 
 
 

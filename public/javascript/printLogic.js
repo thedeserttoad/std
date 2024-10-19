@@ -50,6 +50,13 @@ async function mergePDFs(pdfArray) {
   return mergedPdfFile;
 }
 
+const formatDate = (date) => { // function that sets undefined in 'date ordered' to current date
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are zero-based
+  const year = String(date.getFullYear()); // Use full year
+  return `${day}/${month}/${year}`;
+};
+
 const printLabel = async (dataObject) => {
   console.log("DataObject in PrintLabel(): ", dataObject);
   try {
@@ -65,6 +72,7 @@ const printLabel = async (dataObject) => {
     for (let key in dataObject) {
       console.log("After for loop");
       let innerGlobalData = dataObject[key];
+      const dateTexted = innerGlobalData[13] ? innerGlobalData[13] : formatDate(new Date()); // calls the function that sets undefined in 'date ordered' to current date
 
       // Order globalData[] into a new array
       const orderedGlobalData = [
@@ -77,7 +85,7 @@ const printLabel = async (dataObject) => {
         innerGlobalData[5],  // Part
         innerGlobalData[9] !== "No" ? "Yes" : innerGlobalData[9], // Warranty
         innerGlobalData[11], // Date Ordered
-        innerGlobalData[13], // Date Texted
+        innerGlobalData[13] = dateTexted, // Date Ordered
         innerGlobalData[10]  // Notes
       ];
 

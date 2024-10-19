@@ -12,155 +12,132 @@
 </head>
 
 <body>
-  <div id="notification" class="notification hidden"></div>
-  <!--
-    <div id="background">
-    <img id="backgroundImg" alt="Base64 Image" style="max-width: 100%; height: auto;">
-    <script src="/public/images/image.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', function () {
-        const imgElement = document.getElementById('backgroundImg');
-        imgElement.src = img64; // Use the img64 variable from image.js
-
-        // Wait for the image to load before processing
-        imgElement.onload = function () {
-          processImage(imgElement);
-        };
-      });
-
-      function processImage(img) {
-        // Create a canvas to draw the image
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-
-        // Set canvas size to the image size
-        canvas.width = img.width;
-        canvas.height = img.height;
-
-        // Draw the image onto the canvas
-        ctx.drawImage(img, 0, 0);
-
-        // Get image data from the canvas
-        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        const data = imageData.data;
-
-        // Modify pixels to remove alpha from white parts
-        for (let i = 0; i < data.length; i += 4) {
-          // If the pixel is white (or near white), set alpha to 255 (fully opaque)
-          if (data[i] > 200 && data[i + 1] > 200 && data[i + 2] > 200) {
-            data[i + 3] = 255; // Set alpha to fully opaque
-          }
-        }
-
-        // Put modified image data back to canvas
-        ctx.putImageData(imageData, 0, 0);
-
-        // Convert canvas to base64
-        const newImg64 = canvas.toDataURL('image/png');
-
-        // Set new image source
-        img.src = newImg64;
-      }
-    </script>
+  <div id="background">
+    <canvas id="backgroundCanvas">
+      <img id="backgroundImage" src="">
+    </canvas>
   </div>
-  -->
   <div id="header">
     <img id="logoimg" src="images/icon.ico" alt="Logo"> <!-- Placeholder for the logo -->
     <h2>Sheets 2 Dymo</h2>
     <h5>Created By Jamie Willson and Lachie Leedham</h5>
   </div>
 
-  <div id="spreadsheetContainer">
-    <!-- Toggle Button for Managing Spreadsheets -->
-    <button id="toggleManageButton" class="toggleBtn">Settings</button>
+  <div class="content">
+    <div id="contentBackground">
+      <p></p>
+    </div>
+    <div id="notification" class="notification hidden"></div>
 
+    <div id="spreadsheetContainer">
+      <!-- Spreadsheet management form -->
+      <form id="spreadsheetForm">
 
-    <!-- Spreadsheet management form -->
-    <form id="spreadsheetForm">
+        <div id="login">
+          <button id="loginBtn" class="loginBtn" type="button">Login with Google</button>
+        </div>
 
-      <div id="login">
-        <button id="loginBtn" class="loginBtn" type="button">Login with Google</button>
+        <!-- <label for="spreadsheetId"></label> -->
+
+        <button type="button" id="addSpreadsheetBtn">Load Spreadsheets</button>
+
+      </form>
+
+      <div id="otherSettings">
+        <button type="button" id="featuresBtn">Functions</button>
+        <button type="button" id="changelogBtn">Changelog</button>
       </div>
 
-      <label for="spreadsheetId"></label>
+      <form id="availableSpreadsheets">
+        <!-- <h6 id="accountStatus">Account Status: </h6> -->
+        <div id="refreshWrapper">
+          <select id="spreadsheetSelect">
+            <option value="">Select a spreadsheet</option>
+          </select>
+          <button id="refreshButton">
+            <span class="icon">&#x21bb;</span>
+          </button>
+        </div>
+        <button type="button" id="confirmSpreadsheetBtn">Confirm</button>
+      </form>
+      <button id="toggleManageButton" class="toggleBtn">Settings</button>
 
-      <button type="button" id="addSpreadsheetBtn">Update Spreadsheets</button>
-
-    </form>
-
-    <div id="otherSettings">
-      <button type="button" id="changelogBtn">Changelog</button>
     </div>
-  
-    <form id="availableSpreadsheets">
-      <!--<h4>Available Spreadsheets:</h4>-->
-      <select id="spreadsheetSelect">
-        <option value="">Select a spreadsheet</option>
-      </select>
 
-      <button type="button" id="confirmSpreadsheetBtn">Confirm</button>
-    </form>
-  </div>
+    <div id="featuresContent">
+      <h2>Functions and Features</h2>
+      <h4>Single Row Fetching</h4> 
+      <p>Single number fetches corresponding row.</p>
+      <p>E.g. "7" fetches data from row 7</p>
+      <h4>Specific Row Fetching</h4> 
+      <p>Numbers seperated by ',' fetches individual corresponding rows.</p>
+      <p>E.g. "7,9,10" fetches data from row 7,9 and 10</p>
+      <h4>Row Range Fetching</h4> 
+      <p>Numbers seperated by '-' fetches a range of rows.</p>
+      <p>E.g. "7-10" fetches data from row 7 to row 10</p>
+      <button id="backBtn">Back</button>
+    </div>
 
-  <div id="changelogContent" class="hidden">
-    <h1>Changelog</h1>
-    <div id="changelogList"></div> <!-- This will hold the changelog items -->
-    <button id="backBtn">Back</button>
-</div>
+    <div id="changelogContent" class="hidden">
+      <h1>Changelog</h1>
+      <div id="changelogList"></div> <!-- This will hold the changelog items -->
+      <button id="changelogBackBtn">Back</button>
+    </div>
 
+    <!-- Initially hidden row input form -->
+    <div id="formContainer" style="display: none;">
+      <h2>Fetch Google Sheets Data</h2>
+      <form id="rowForm">
+        <label for="month">Select Month:</label>
+        <select id="month" name="month" required>
+          <option value="" disabled selected>Select a month</option>
+          <option value="January">January</option>
+          <option value="February">February</option>
+          <option value="March">March</option>
+          <option value="April">April</option>
+          <option value="May">May</option>
+          <option value="June">June</option>
+          <option value="July">July</option>
+          <option value="August">August</option>
+          <option value="September">September</option>
+          <option value="October">October</option>
+          <option value="November">November</option>
+          <option value="December">December</option>
 
-  <!-- Initially hidden row input form -->
-  <div id="formContainer" style="display: none;">
-    <h1>Fetch Google Sheets Data</h1>
-    <form id="rowForm">
-      <label for="month">Select Month:</label>
-      <select id="month" name="month" required>
-        <option value="" disabled selected>Select a month</option>
-        <option value="January">January</option>
-        <option value="February">February</option>
-        <option value="March">March</option>
-        <option value="April">April</option>
-        <option value="May">May</option>
-        <option value="June">June</option>
-        <option value="July">July</option>
-        <option value="August">August</option>
-        <option value="September">September</option>
-        <option value="October">October</option>
-        <option value="November">November</option>
-        <option value="December">December</option>
+        </select>
 
-      </select>
+        <label for="rowIndex">Row number:</label>
+        <input type="text" id="rowIndex" name="rowIndex" required>
+        <button type="submit">Fetch Data</button>
+        <button type="button" id="rowFormFeaturesBtn">Functions</button>
+        <button type="button" id="backToSpreadsheetBtn">Back</button>
+      </form>
+    </div>
 
-      <label for="rowIndex">Row number:</label>
-      <input type="text" id="rowIndex" name="rowIndex" required>
+    <!-- Modal for showing data -->
+    <div id="modal">
+      <div id="modalContent">
+        <span class="close">&times;</span>
+        <h2>Google Sheets Data</h2>
+        <pre id="modalData"></pre>
+        <button id="printDataButton">Print Label</button>
+      </div>
+    </div>
 
-      <button type="submit">Fetch Data</button>
-      <button type="button" id="backToSpreadsheetBtn">Back</button>
-    </form>
-  </div>
+    <div id="labelPreview" style="display: none;">
+      <h5>Label Preview</h5>
+      <div id="labelContent" style="border: 1px solid #000; padding: 10px; width: 200px;">
+        <!-- Populated label content will go here -->
+      </div>
+    </div>
 
-  <!-- Modal for showing data -->
-  <div id="modal">
-    <div id="modalContent">
-      <span class="close">&times;</span>
-      <h2>Google Sheets Data</h2>
-      <pre id="modalData"></pre>
-      <button id="printDataButton">Print Label</button>
+    <div id="footer">
+      <h4>Indev v1.3</h4>
+      <button id="reloadBtn" onclick="location.reload()">
+        <span class="icon">&#x21bb;</span>
+      </button>
     </div>
   </div>
-
-  <div id="labelPreview" style="display: none;">
-    <h2>Label Preview</h2>
-    <div id="labelContent" style="border: 1px solid #000; padding: 10px; width: 200px;">
-      <!-- Populated label content will go here -->
-    </div>
-  </div>
-
-  <div id="footer">
-    <h4>Beta v1.0</h4>
-  </div>
-  <img id="image" alt="Background Image" style="display:none;">
-
   <script src="/javascript/script.js"></script>
 </body>
 
