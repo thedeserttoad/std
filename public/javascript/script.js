@@ -10,6 +10,9 @@ let printLabel, img64, checkAuthentication, authenticateWithGoogle;
 var inRowForm = false;
 let isSignedIn = false;
 
+let windowHeight = window.height;
+let windowWidth = window.width;
+
 document.addEventListener('DOMContentLoaded', function () {
   const otherSettingsForm = document.getElementById('otherSettings');
   otherSettingsForm.style.display = 'none';  
@@ -83,6 +86,16 @@ function animateBackground(ctx, pattern, canvas) {
   requestAnimationFrame(draw);
 }
 
+window.addEventListener('resize', function() {
+  if (window.innerWidth <= 600) {
+      window.resizeTo(650, window.innerWidth);
+      windowWidth = window.width;
+  }
+  if (window.innerHeight <= 850) {
+      window.resizeTo(window.innerHeight, 900);
+      windowHeight = window.height;
+  }
+});
 
 document.addEventListener('DOMContentLoaded', function () {
   // Import the image data from image.js
@@ -521,6 +534,10 @@ function loadSpreadsheetsFromStorage() {
 document.getElementById('confirmSpreadsheetBtn').onclick = function () {
   const selectedDropdown = document.getElementById('spreadsheetSelect');
   const selectedId = selectedDropdown.value; // Get the ID from the dropdown
+  const formContainer = document.getElementById('formContainer');
+  const content = document.querySelector('.content');
+  const formRect = content.getBoundingClientRect();
+  const contentBackground = document.getElementById('contentBackground');
 
   // Check if a spreadsheet is selected
   if (selectedId) {
@@ -535,17 +552,30 @@ document.getElementById('confirmSpreadsheetBtn').onclick = function () {
       console.log(`Selected Spreadsheet: ${selectedSpreadsheet.name}, ID: ${spreadsheetId}`);
       //inRowForm = true;
 
+      
       // Hide the available spreadsheets form
       document.getElementById('availableSpreadsheets').style.display = 'none';
       document.getElementById('spreadsheetForm').style.display = 'none'; // Hide the spreadsheet form
       document.getElementById('footer').style.display = 'none';
-      document.getElementById('formContainer').style.display = 'flex'; // Show the row form
-
+      
       // Hide the Manage Spreadsheets button
       document.getElementById('toggleManageButton').style.display = 'none';
+            
+      // Set the height and width of contentBackground based on formContainer's dimensions
+      contentBackground.style.height = (formRect.height + 150) + 'px';  // Add 'px'
+      contentBackground.style.width = (formRect.width + 100) + 'px';    // Add 'px'
+
+      // Get the window's height and set the top position of contentBackground
+      const windowHeight = window.innerHeight;
+      contentBackground.style.top = (windowHeight / 2) - (formRect.height); // + (formRect.height / 4)) + 'px';  // Center it vertically
+      //contentBackground.style.top = '-5%';
+      fadeIn(formContainer);
+      document.getElementById('formContainer').style.display = 'flex'; // Show the row form
+        
+      fadeIn(backBtn); 
 
       // Hide header
-      document.getElementById('header').style.display = 'none';
+      //document.getElementById('header').style.display = 'none';
     } else {
       showNotification('Selected spreadsheet not found.');
     }
@@ -661,47 +691,51 @@ document.addEventListener('DOMContentLoaded', function () {
   const betaText = document.getElementById('footer');
   const featuresContent = document.getElementById('featuresContent');
   const contentBackground = document.getElementById('contentBackground');
+
   // Initially hide the changelog content and back button
   changelogContent.style.display = 'none';
   backBtn.style.display = 'none';
+
   const defaultFrontPageHeight = '340px';
   const defaultWidth = '280px';
   const defaultSettingsPageHeight = '490px';
-   ;
 
 
   // Add an event listener to the changelog button
   changelogBtn.addEventListener('click', function () {
-    // Hide the settings form and show the changelog
-    
-    contentBackground.style.top = '-63%'
-    contentBackground.style.height = '360px';
-    contentBackground.style.width = '500px';
+    const footer = document.getElementById('footer');
 
+    // Hide the settings form and show the changelog
+    footer.style.display = 'none';
     border.style.display = 'none';
     featuresBtn.style.display = 'none';
     settingsForm.style.display = 'none'; // Hide settings
     
+    contentBackground.style.height = '360px';
+    contentBackground.style.width = '500px';
+    contentBackground.style.top = '-63%';
+
+
     fadeIn(changelogContent);
     changelogContent.style.display = 'flex'; // Show changelog
-     ;
+     
     fadeIn(changelogBackBtn); 
     
     changelogBackBtn.style.display = 'flex';
     hideSettingsButton.style.display = 'none';
     changelogBtn.style.display = 'none';
     betaText.style.display = 'none';
-     ;
+     
       
   });
 
   changelogBackBtn.addEventListener('click', function() { 
       // Hide the changelog and show the settings form
-      /*
-      contentBackground.style.top = '-28%';
+      
       contentBackground.style.height = defaultSettingsPageHeight;
       contentBackground.style.width = defaultWidth;
-      */
+      contentBackground.style.top = '-28%';
+      
       border.style.display = 'flex';
        
 
@@ -739,6 +773,7 @@ document.addEventListener('DOMContentLoaded', function () {
       contentBackground.style.width = defaultWidth;
       contentBackground.style.height = defaultSettingsPageHeight;
       contentBackground.style.top = '-28%';
+
       border.style.display = 'flex';
       changelogContent.style.display = 'none';  // Hide changelog
       
@@ -747,22 +782,22 @@ document.addEventListener('DOMContentLoaded', function () {
       backBtn.style.display = 'none';  // Hide back button
       featuresContent.style.display = 'none';
       hideSettingsButton.style.display = 'flex';
-       ;
+       
       
       fadeIn(featuresBtn);
       featuresBtn.style.display = 'flex';
-       ;
+       
       
       fadeIn(changelogBtn);
       changelogBtn.style.display = 'flex';
       
       fadeIn(betaText);
       betaText.style.display = 'flex';
-       ;
+       
       
       fadeIn(hideSettingsButton);
       hideSettingsButton.style.display = 'flex';
-       ;
+       
     }
   });
 
@@ -797,25 +832,25 @@ document.addEventListener('DOMContentLoaded', function () {
     betaText.style.display = 'none';
   }
 
-    featuresBtn.addEventListener('click', function () {
-        contentBackground.style.height = '505px';
-        contentBackground.style.width = '500px';
-        contentBackground.style.top = '-38%';
-        border.style.display = 'none';
-        settingsForm.style.display = 'none';  // Hide settings
-        changelogContent.style.display = 'none';  // Show changelog
+  featuresBtn.addEventListener('click', function () {
+      contentBackground.style.height = '505px';
+      contentBackground.style.width = '500px';
+      contentBackground.style.top = '-38%';
+      border.style.display = 'none';
+      settingsForm.style.display = 'none';  // Hide settings
+      changelogContent.style.display = 'none';  // Show changelog
 
-        fadeIn(featuresContent);
-        featuresContent.style.display = 'flex';
-         ;
+      fadeIn(featuresContent);
+      featuresContent.style.display = 'flex';
+        
 
-        fadeIn(backBtn);
-        backBtn.style.display = 'flex';
-        hideSettingsButton.style.display = 'none';
-        featuresBtn.style.display = 'none';
-        changelogBtn.style.display = 'none';
-        betaText.style.display = 'none';
-         ;
+      fadeIn(backBtn);
+      backBtn.style.display = 'flex';
+      hideSettingsButton.style.display = 'none';
+      featuresBtn.style.display = 'none';
+      changelogBtn.style.display = 'none';
+      betaText.style.display = 'none';
+        
 
   });
 });

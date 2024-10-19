@@ -7,6 +7,10 @@ body {
     height: 100vh;      
     margin: 0;
     flex-direction: column;
+
+    min-width: 500px;
+    min-height: 700px;
+    overflow: hidden;
 }
 
 #header {
@@ -39,8 +43,8 @@ body {
     /* Remove default padding (if any) */
     justify-content: center;
     /* Outline effect using text-shadow */
-    color: rgb(255, 255, 255); /* Change to your desired text color */
-    text-shadow: 
+    color: rgb(0, 0, 0); /* Change to your desired text color */
+    /*text-shadow: 
         -1px -1px 0 black,  
         1px -1px 0 black,
         -1px 1px 0 black,
@@ -79,6 +83,7 @@ body {
 
 .notification.show {
     display: flex;
+    z-index: 1000;
     transform: translateY(0);
 }
 
@@ -286,6 +291,10 @@ body {
     /* Smooth transition */
 }
 
+#formContainer {
+    flex-direction: column;
+}
+
 #formContainer button {
 
     margin: 10px;
@@ -298,6 +307,12 @@ body {
     margin-bottom: 0.5rem;
     width: 300px;
 
+}
+
+#formContainer h2 {
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    /*width: 300px;*/
 }
 
 
