@@ -1,8 +1,16 @@
 {
   "changelog": [
     {
-      "version": "Beta v1.0",
-      "description": ""
+      "version": "Beta v1.1 TC (Testing Candidate)",
+      "description": "Batch printing (multiple labels at once), added official app icon, added changelog section, tweaks and bug fixes."
+    },
+    {
+      "version": "Beta v1.0.2 TC (Testing Candidate)",
+      "description": "App icon for setup | Added changelog section"
+    },
+    {
+      "version": "Beta v1.0.1 TC (Testing Candidate)",
+      "description": "Numerous tweaks and fixes"
     }
   ]
 }

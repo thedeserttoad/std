@@ -4,49 +4,59 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
+    height: 100vh;      
     margin: 0;
     flex-direction: column;
-}
-
-#backgroundImg {
-    display: block;
-    /* Centers the image */
-    max-width: 80%;
-    /* Set a maximum width */
-    height: auto;
-    /* Maintain aspect ratio */
 }
 
 #header {
     display: flex;
+    z-index: 3;
     flex-direction: column;
+    justify-content: center;
     align-items: center;
     text-align: center;
     margin-bottom: 20px;
-    /* Add margin below the header for spacing */
+   
 }
 
-#header img {
-    display: block;
-    margin: 0 auto;
-    max-width: 100%;
-}
+    #header img {
+        display: flex;
+        margin: 0 auto;
+        max-width: 100%;
+        transform: translateX(+8px);
+       
+    }
 
 #header h2,
 #header h4,
 #header h5 {
+    display: flex;
+    
     margin: 0;
     /* Remove default margin */
     padding: 0;
     /* Remove default padding (if any) */
+    justify-content: center;
+    /* Outline effect using text-shadow */
+    color: rgb(255, 255, 255); /* Change to your desired text color */
+    text-shadow: 
+        -1px -1px 0 black,  
+        1px -1px 0 black,
+        -1px 1px 0 black,
+        1px 1px 0 black; /* Adjust the color and pixel values as needed */
+
 }
 
 #footer {
     display: flex;
     flex-direction: column;
-    align-items: end;
+    align-items: center;
+    font-weight: normal;
+    margin-top: 35px;
 }
+
+
 
 .notification {
     position: fixed;
@@ -89,18 +99,40 @@ body {
     /* Underline text to indicate it's a button */
 }
 
+#contentBackground {
+    position: absolute;
+    background-color: white; /* The white rectangle */
+    width: 280px; /* Adjust this value to control the width of the white rectangle */
+    height: 340px; /* Adjust this value to control the height */
+    top: -40%;
+    left: 50%;
+    transform: translate(-50%); /* Center the div horizontally and vertically */
+    z-index: -1; /* Set a lower z-index so it appears beneath other elements */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2); /* Optional: Add a shadow for better visibility */
+    border-radius: 10px; /* Optional: Rounded corners */
+    padding: 20px; /* Add padding to create space inside the rectangle */
+    transition: width 0.25s ease, height 0.25s ease;
+}
+
 #spreadsheetContainer {
+
     display: flex;
     flex-direction: column;
     width: 250px;
     gap: 1rem;
-    /* Space between elements */
+    justify-content: center;
     align-items: center;
-    /* Center items horizontally */
+
+    
 }
 
 #otherSettings {
     display: none;
+}
+
+#otherSettings button {
+    justify-content: center;
+    display: flex;
 }
 
 .toggleBtn {
@@ -142,6 +174,52 @@ body {
     /* Add vertical margin for spacing */
 }
 
+#refreshWrapper {
+    display: flex;
+    align-items: center; /* Center items vertically */
+    padding-bottom: 0;
+}
+
+#refreshWrapper select,
+#refreshWrapper button {
+    height: 40px; /* Set a uniform height */
+    padding: 10px; /* Optional: Add some horizontal padding */
+    line-height: 1; /* Ensure consistent line height */
+    font-size: 16px; /* Set a uniform font size */
+    border: 1px solid #ccc; /* Optional: Add border for consistency */
+    border-radius: 5px; /* Optional: Rounded corners for consistency */
+    box-sizing: border-box; /* Ensure padding and border are included in total width/height */
+    margin-top: 0px;
+    margin-bottom: -5px;
+}
+
+#refreshWrapper button {
+    margin-left: 2px; /* Space between select and button */
+    transform: translateY(2px); /* Move the button up slightly */
+}
+
+#refreshButton {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    border: none;
+    background-color: #007bff; /* Blue background */
+    color: white; /* White text/icon */
+    border-radius: 10%; /* Slight rounding for a soft square look (optional) */
+    display: flex;
+    justify-content: center;
+    align-items: center; /* Center the icon inside the button */
+  }
+  
+  .icon {
+    font-size: 24px; /* Adjust size of the icon */
+    transition: transform 0.3s ease; /* Smooth rotation */
+  }
+  
+  #refreshButton:hover .icon {
+    transform: rotate(90deg); /* Rotate the icon on hover */
+  }
+
 #spreadsheetForm,
 #availableSpreadsheets {
     display: flex;
@@ -150,11 +228,29 @@ body {
     width: 100%;
     /* Set to full width of its parent */
     padding: 10px;
+    padding-bottom: 9px;
     /* Add some padding */
     border: 1px solid #ccc;
     /* Optional: add a border for visual separation */
     border-radius: 5px;
     /* Optional: rounded corners */
+}
+
+#spreadsheetForm button {
+    margin: 0px;
+}
+
+#loginBtn {
+    width: 100%;
+    margin-bottom: 10px; /* Space below the login button */
+}
+
+#addSpreadsheetBtn {
+    margin-top: 10px; /* Space above the load spreadsheets button */
+}
+
+#availableSpreadsheets button {
+   margin-bottom: 5x;
 }
 
 #availableSpreadsheets h4 {
@@ -163,7 +259,13 @@ body {
 }
 
 #spreadsheetSelect {
+    width: 195px;
     margin-top: 10px;
+}
+
+#availableSpreadsheets h6 {
+    margin: 0px;  /* Optional: Add spacing between the two elements */
+    padding: 0px;
 }
 
 #spreadsheetForm {
@@ -185,8 +287,19 @@ body {
 }
 
 #formContainer button {
+
     margin: 10px;
+
 }
+
+#formContainer h6 {
+
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+    width: 300px;
+
+}
+
 
 h1 {
     text-align: center;
@@ -215,6 +328,15 @@ input[type="text"] {
     background-color: #f8f8f8;
 }
 
+#rowIndex {
+    padding: 10px;
+    margin-bottom: 0.5rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
+    background-color: #f8f8f8;
+}
+
 select:focus,
 input[type="text"]:focus {
     outline: none;
@@ -231,6 +353,7 @@ button {
     font-weight: bold;
     cursor: pointer;
     transition: background-color 0.3s;
+    justify-content: center;
 }
 
 button:hover {
@@ -327,11 +450,108 @@ button:hover {
 
 }
 
+#featuresContent {
+    display: none;               /* Use flexbox for layout */
+    flex-direction: column;      /* Stack children vertically */
+    width: 500px;
+    text-align: center;          /* Center text within the div */
+}
+
+#featuresContent button {
+    margin-top: 30px;
+}
+
+#featuresContent p {
+    text-align: left;
+    margin-left: 30px;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+#featuresContent h4 {
+    text-align: left;
+    padding-top: 20px;
+    padding-bottom: 3px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+#featuresContent button {
+    align-self: center;
+    justify-content: center;
+    width: 300px;
+}
+
 #changelogContent {
     display: flex;               /* Use flexbox for layout */
     flex-direction: column;      /* Stack children vertically */
     align-items: center;         /* Center items horizontally */
     justify-content: center;     /* Center items vertically */
     /*height: 100vh;              /* Make it full height of the viewport */
+    width: 500px;
     text-align: center;          /* Center text within the div */
-  }
+}
+
+#changelogContent button {
+    justify-content: center;
+    width: 50%;
+}
+
+#changelogContent h1 {
+    display: block;
+    padding-top: 20px;
+}
+
+#changelogList {
+    display: block;
+    flex-direction: column;
+    align-items: left;
+    width: 100%
+}
+
+/* Style for other content */
+.content {
+    position: relative; /* Relative position for other content */
+    z-index: 1; /* Ensure content is above the background */
+}
+
+#background {
+    position:fixed; /* Fixed position to cover the entire viewport */
+    width: 100vw; /* Full viewport width */
+    height: 100vh; /* Full viewport height */
+    padding: 0; /* Ensure no padding */
+    margin: 0; /* Ensure no margin */
+    background-image: url('data:image/png;base64,...'); /* Replace with your Base64 image */
+    /*background-size: contain; /* Maintain original size, can also be 'contain' */
+    background-repeat: repeat; /* Tile the background image */
+    z-index: -2; /* Ensure it’s behind other elements */
+}
+
+#backgroundCanvas {
+    position: absolute; /* Positioning the canvas absolutely */
+    top: 0; /* Align to the top of the screen */
+    left: 0; /* Align to the left of the screen */
+    width: 100vw; /* Fill the width of the parent */
+    height: 100vh; /* Fill the height of the parent */
+    pointer-events: none; /* Allow clicks to pass through to underlying elements */
+    background-color: transparent; /* Ensure canvas background is transparent */
+    z-index: -1; /* Ensure it's above the background but below any content */
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.fade-in {
+    animation: fadeIn 0.5s forwards; /* 0.5 seconds for the fade-in effect */
+}
+
+

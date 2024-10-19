@@ -13,14 +13,14 @@ async function checkAuthentication() {
     if (accessTokenFromUrl) {
       accessToken = accessTokenFromUrl;
       localStorage.setItem('access_token', accessToken); // Store token in localStorage
-      console.log('Access token retrieved from URL and saved:', accessToken);
+      console.log('Access token retrieved from URL and saved:');
   
       // Clear the token from the URL to avoid repeating this process unnecessarily
       const newUrl = window.location.href.split('?')[0];
       window.history.replaceState({}, document.title, newUrl);
     } else if (accessTokenFromStorage) {
       accessToken = accessTokenFromStorage;
-      console.log('Access token retrieved from localStorage:', accessToken);
+      console.log('Access token retrieved from localStorage:');
     } else {
       // No token available in either URL or localStorage, try fetching from backend
       try {
@@ -34,7 +34,7 @@ async function checkAuthentication() {
   
         if (accessToken) {
           localStorage.setItem('access_token', accessToken); // Store token in localStorage
-          console.log('Access token retrieved from backend and saved:', accessToken);
+          console.log('Access token retrieved from backend and saved:');
         } else {
           console.log('No access token found in backend.');
         }
@@ -45,7 +45,8 @@ async function checkAuthentication() {
     }
   
     if (accessToken) {
-      console.log("Access token exists:", accessToken);
+      console.log("Access token exists:");
+      console.log(accessToken);
       return accessToken; // Return the access token
     } else {
       console.log('No access token found. Please authenticate again.');
