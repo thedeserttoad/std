@@ -1,8 +1,8 @@
 {
   "changelog": [
     {
-      "version": "Beta v1.1 TC (Testing Candidate)",
-      "description": "Batch printing (multiple labels at once), added official app icon, added changelog section, tweaks and bug fixes."
+      "version": "Indev 1.7",
+      "description": "Added animations throughout the app, menu bar is now hidden, smoothing, adjustments, and numerous other tweaks and bug fixes."
     },
     {
       "version": "Beta v1.0.2 TC (Testing Candidate)",

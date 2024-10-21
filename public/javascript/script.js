@@ -22,7 +22,6 @@ let windowWidth = window.width;
 document.addEventListener('DOMContentLoaded', function () {
   const otherSettingsForm = document.getElementById('otherSettings');
   otherSettingsForm.style.display = 'none';  
-   ;
 });
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -41,6 +40,7 @@ function fadeIn(button) {
 }
 
 function fadeOut(button) {
+  
     button.classList.remove('fade-in'); // Remove fade-in class
     button.classList.add('fade-out'); // Add fade-out class
 
@@ -418,7 +418,9 @@ document.getElementById('rowForm').onsubmit = async (event) => {
   //document.getElementById('modalData').textContent = JSON.stringify(formattedData, null, 2);
   // Insert the generated table HTML into the modal
   document.getElementById('modalData').innerHTML = generateTableHTML(partialData);
-  document.getElementById('modal').style.display = 'flex';
+  const modal = document.getElementById('modal');
+   modal.style.display = 'block';
+  fadeIn(modal);
 };
 
 // Function to generate HTML table
@@ -439,7 +441,8 @@ function generateTableHTML(data) {
 
 // Close modal function
 function closeModal() {
-  document.getElementById('modal').style.display = 'none';
+  const modal = document.getElementById('modal');
+  fadeOut(modal);
 }
 
 window.onload = function () {
@@ -539,26 +542,32 @@ function loadSpreadsheetsFromStorage() {
 // Event handler for the confirm button
 document.getElementById('confirmSpreadsheetBtn').onclick = function () {
   const selectedDropdown = document.getElementById('spreadsheetSelect');
-  const selectedId = selectedDropdown.value; // Get the ID from the dropdown
+  const selectedId = selectedDropdown.value; // Get the ID from the dropdown UNCOMMENT
   const formContainer = document.getElementById('formContainer');
   const content = document.querySelector('.content');
   const formRect = content.getBoundingClientRect();
   const contentBackground = document.getElementById('contentBackground');
 
   // Check if a spreadsheet is selected
+
+  
   if (selectedId) {
     console.log('Spreadsheets:', spreadsheets);
 
     // Find the spreadsheet object that matches the selected ID
-    const selectedSpreadsheet = spreadsheets.find(spreadsheet => spreadsheet.id === selectedId);
+    const selectedSpreadsheet = spreadsheets.find(spreadsheet => spreadsheet.id === selectedId); //UNCOMMENT
+    
     
     if (selectedSpreadsheet) {
+         
       fromSheetSelection = true;
-      const spreadsheetId = selectedSpreadsheet.id; // Get the ID from the selected object
-      selectedSpreadsheetId = spreadsheetId; // Store the selected spreadsheet ID
-      console.log(`Selected Spreadsheet: ${selectedSpreadsheet.name}, ID: ${spreadsheetId}`);
-      //inRowForm = true;
-
+      inRowForm = true; 
+      console.log("is currently in the row form");
+     
+      const spreadsheetId = selectedSpreadsheet.id; // Get the ID from the selected object UNCOMMENT
+      selectedSpreadsheetId = spreadsheetId; // Store the selected spreadsheet ID UNCOMMENT
+      console.log(`Selected Spreadsheet: ${selectedSpreadsheet.name}, ID: ${spreadsheetId}`); //UNCOMMENT
+      
       
       // Hide the available spreadsheets form
       document.getElementById('availableSpreadsheets').style.display = 'none';
@@ -569,8 +578,9 @@ document.getElementById('confirmSpreadsheetBtn').onclick = function () {
       document.getElementById('toggleManageButton').style.display = 'none';
             
       // Set the height and width of contentBackground based on formContainer's dimensions
-      contentBackground.style.height = (formRect.height + 150) + 'px';  // Add 'px'
-      contentBackground.style.width = (formRect.width + 100) + 'px';    // Add 'px'
+      contentBackground.style.height = '520px';  // Add 'px'
+      contentBackground.style.width = '280px';
+      contentBackground.style.top = '-37%';    // Add 'px'
 
       // Get the window's height and set the top position of contentBackground
       const windowHeight = window.innerHeight;
@@ -595,20 +605,27 @@ document.getElementById('confirmSpreadsheetBtn').onclick = function () {
 document.getElementById('backToSpreadsheetBtn').onclick = function () {
   contentBackground.style.height = defaultFrontPageHeight;
   contentBackground.style.width = defaultWidth;
-  contentBackground.style.top = '-28%';
+  contentBackground.style.top = '-40%';
+ 
+
+   if (inRowForm) {
+      inRowForm = false;
+      
+      console.log("Not in row form");
+   }
 
   // Hide the row form
   document.getElementById('formContainer').style.display = 'none';
 
   // Show the available spreadsheets form and reset its display
-  document.getElementById('availableSpreadsheets').style.display = 'flex';
+  fadeIn(availableSpreadsheets);
   document.getElementById('spreadsheetForm').style.display = 'none'; // Show the form again
 
   //Show header
   document.getElementById('header').style.display = 'flex';
   document.getElementById('footer').style.display = 'flex';
   // Show the Manage Spreadsheets button again
-  document.getElementById('toggleManageButton').style.display = 'flex';
+  fadeIn(toggleManageButton);
 
   // Clear the spreadsheet selection dropdown and reset its state if necessary
   document.getElementById('spreadsheetSelect').selectedIndex = 0; // Reset dropdown to the first option
@@ -618,6 +635,8 @@ document.getElementById('backToSpreadsheetBtn').onclick = function () {
 
   // Make sure to update the dropdown with the current spreadsheets
   updateSpreadsheetDropdown();
+
+  
 };
 
 document.getElementById('toggleManageButton').addEventListener('click', function () {
@@ -626,13 +645,15 @@ document.getElementById('toggleManageButton').addEventListener('click', function
   const availableForm = document.getElementById('availableSpreadsheets');
   const otherSettingsForm = document.getElementById('otherSettings');
   const featuresBtn = document.getElementById('featuresBtn');
+  const changelogBtn = document.getElementById('changelogBtn');
 
   // Toggle the visibility of the spreadsheet management form
   if (form.style.display === 'none' || form.style.display === '') {
-    contentBackground.style.top = '-28%';
     contentBackground.style.height = defaultSettingsPageHeight;
+    contentBackground.style.top = '-28%';
     availableForm.style.display = 'none';
-    otherSettingsForm.style.display = 'flex'; // show border
+    otherSettingsForm.style.display = 'flex';
+    changelogBtn.style.display = 'flex';// show border
     featuresBtn.style.display = 'flex';
     this.textContent = 'Back'; // Update button text
     fadeIn(form);
@@ -774,10 +795,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
   // Add an event listener to the back button
   backBtn.addEventListener('click', function () {
-    if(inRowForm) {
-      featuresContent.style.display = 'none';
-      document.getElementById('formContainer').style.display = 'flex'; // Show the row form
-      inRowForm = false;
+    if (inRowForm) {
+      document.getElementById('contentBackground');
+      document.getElementById('featuresContent').style.display = 'none';
+      fadeIn(formContainer); // Show the row form
+
+      contentBackground.style.width = defaultWidth;
+      contentBackground.style.height = '520px';
+
     }
         
     else {
@@ -797,24 +822,27 @@ document.addEventListener('DOMContentLoaded', function () {
        
       
       fadeIn(featuresBtn);
-      featuresBtn.style.display = 'flex';
+     // featuresBtn.style.display = 'flex';
        
       
       fadeIn(changelogBtn);
-      changelogBtn.style.display = 'flex';
+      //changelogBtn.style.display = 'flex';
       
       fadeIn(betaText);
-      betaText.style.display = 'flex';
+     // betaText.style.display = 'flex';
        
       
       fadeIn(hideSettingsButton);
-      hideSettingsButton.style.display = 'flex';
+      //hideSettingsButton.style.display = 'flex';
        
     }
   });
 
   featuresFromRowFormBtn.addEventListener('click', function() {
     inRowForm = true;
+
+    contentBackground.style.width = '500px';
+    
     openFeatures();
   });
   
@@ -834,33 +862,35 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   function openFeatures() {
-    document.getElementById('formContainer').style.display = 'none'; // Show the row form    
+    document.getElementById('formContainer').style.display = 'none'; 
+    contentBackground.style.height = '505px';
+    contentBackground.style.width = '450px';
     settingsForm.style.display = 'none';  // Hide settings
     changelogContent.style.display = 'none';  // Show changelog
-    featuresContent.style.display = 'flex';
+    fadeIn(featuresContent);
+    fadeIn(backBtn);
     backBtn.style.display = 'flex';
     hideSettingsButton.style.display = 'none';
-      changeLogBtnStyle.style.display = 'none';
+      changelogBtn.style.display = 'none';
     betaText.style.display = 'none';
   }
 
   featuresBtn.addEventListener('click', function () {
+  console.log(inRowForm);
       contentBackground.style.height = '505px';
-      contentBackground.style.width = '500px';
+      contentBackground.style.width = '450px';
       contentBackground.style.top = '-38%';
       border.style.display = 'none';
       settingsForm.style.display = 'none';  // Hide settings
       changelogContent.style.display = 'none';  // Show changelog
 
       fadeIn(featuresContent);
-      featuresContent.style.display = 'flex';
-        
-
+      
       fadeIn(backBtn);
       backBtn.style.display = 'flex';
       hideSettingsButton.style.display = 'none';
       featuresBtn.style.display = 'none';
-      changelogBtn.style.display = 'none';
+      //changelogBtn.style.display = 'none';
       betaText.style.display = 'none';
         
 
@@ -939,5 +969,29 @@ async function ResizeContent() {
   background.style.transform.translateX 
 }
 
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
+window.onload = async function() {
+  const splash = document.getElementById('splash');
+  const background = document.getElementById('splashBackground');
+
+  const w = window.width;
+  const h = window.height;
+
+  //splash.transform.translateY(-200 + 'px');
+  splash.style.top = '-400wh';
+  //splash.style.left = w / 4;
+
+  // Start the animation after a 1-second delay
+  setTimeout(() => {
+      background.classList.add('splashanim'); // Trigger the animation
+  }, 1000); // Delay before starting the animation
+
+  // Hide the splash screen after the animation completes (3 seconds)
+  setTimeout(() => {
+      splash.style.display = 'none'; // Hide the splash screen
+  }, 4000); // Total delay (1000ms + 3000ms animation duration)
+};
 

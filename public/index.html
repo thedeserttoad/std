@@ -67,14 +67,14 @@
     <div id="featuresContent">
       <h2>Functions and Features</h2>
       <h4>Single Row Fetching</h4> 
-      <p>Single number fetches corresponding row.</p>
-      <p>E.g. "7" fetches data from row 7</p>
+      <p>A single number fetches its corresponding row.</p>
+      <p>E.g., "7" fetches data from row 7</p>
       <h4>Specific Row Fetching</h4> 
-      <p>Numbers seperated by ',' fetches individual corresponding rows.</p>
-      <p>E.g. "7,9,10" fetches data from row 7,9 and 10</p>
+      <p>Numbers separated by ',' fetch individual corresponding rows.</p>
+      <p>E.g., "7,9,10" fetches data from row 7,9 and 10</p>
       <h4>Row Range Fetching</h4> 
-      <p>Numbers seperated by '-' fetches a range of rows.</p>
-      <p>E.g. "7-10" fetches data from row 7 to row 10</p>
+      <p>Numbers separated by '-' fetch a range of rows.</p>
+      <p>E.g., "7-10" fetches data from row 7 to 10</p>
       <button id="backBtn">Back</button>
     </div>
 
@@ -86,7 +86,7 @@
 
     <!-- Initially hidden row input form -->
     <div id="formContainer" style="display: none;">
-      <h2>Fetch Google Sheets Data</h2>
+      <h2>Select Data</h2>
       <form id="rowForm">
         <label for="month">Select Month:</label>
         <select id="month" name="month" required>
@@ -132,10 +132,17 @@
     </div>
 
     <div id="footer">
-      <h4>Indev v1.3</h4>
+      <h4>Indev v1.7</h4>
       <button id="reloadBtn" onclick="location.reload()">
         <span class="icon">&#x21bb;</span>
       </button>
+    </div>
+  </div>
+
+  <div id="splash">
+    <div id="splashBackground"></div>
+    <div id ="splashImage">
+      <img id="splashImg" src="images/icon.ico" alt="Logo">
     </div>
   </div>
   <script src="/javascript/script.js"></script>

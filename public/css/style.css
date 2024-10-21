@@ -25,6 +25,7 @@ body {
 }
 
     #header img {
+        
         display: flex;
         margin: 0 auto;
         max-width: 100%;
@@ -35,6 +36,8 @@ body {
 #header h2,
 #header h4,
 #header h5 {
+
+    font-style: oblique;
     display: flex;
     
     margin: 0;
@@ -310,8 +313,10 @@ body {
 }
 
 #formContainer h2 {
-    margin-top: 0.5rem;
-    margin-bottom: 0.5rem;
+    text-decoration: underline;
+    text-align: center;
+    margin-top: 0rem;
+    margin-bottom: 1rem;
     /*width: 300px;*/
 }
 
@@ -345,7 +350,7 @@ input[type="text"] {
 
 #rowIndex {
     padding: 10px;
-    margin-bottom: 0.5rem;
+    margin-bottom: 1rem;
     border: 1px solid #ddd;
     border-radius: 5px;
     font-size: 1rem;
@@ -375,22 +380,73 @@ button:hover {
     background-color: #0056b3;
 }
 
+#splash {
+    position: fixed; /* Change to fixed to overlay on everything */
+    display: flex;
+    z-index: 1997;
+    left: 0;
+    top: 0;
+    width: 1920px; /* Full viewport width */
+    height: 1920px; /* Full viewport height */
+    justify-content: center;
+    align-items: center;
+    /*background-color: rgba(100, 100, 100, 1); /* Background color for the splash */
+}
+
+#splashBackground {
+    display: flex;
+    position: absolute;
+    z-index: 1998;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(100, 100, 100, 1); /* Adjust opacity */
+    justify-content: center;
+    align-items: center;
+    /*border-radius: 50%; /* Make it circular */
+}
+
+#splashImg {
+    display: flex;
+    z-index: 1999;
+    position: absolute;
+    justify-content: center;
+    align-items: center;  
+    transform: translate(-47%, -100%);
+}
+
+@keyframes splashanim {
+    0% {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%; /* Start as a circle */
+    }
+    100% {
+        width: 0%;
+        height: 0%;
+        border-radius: 50%; /* Stay circular */
+    }
+}
+
+.splashanim {
+    animation: splashanim 3s forwards; /* Define the animation here */
+}
+
 /* Modal Styling */
 #modal {
     display: none;
     position: fixed;
-    z-index: 1;
+    z-index: 1000;
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.5);
-    display: flex;
     justify-content: center;
     align-items: center;
 }
 
 #modalContent {
+    
     background-color: white;
     padding: 20px;
     border-radius: 10px;
@@ -409,6 +465,7 @@ button:hover {
 }
 
 #modalContent button {
+   
     margin-top: auto;
     /* Push the button to the bottom */
     padding: 10px 20px;
@@ -426,6 +483,7 @@ button:hover {
 }
 
 #modalContent pre {
+    
     text-align: left;
     background-color: #f4f4f4;
     padding: 10px;
@@ -448,6 +506,7 @@ button:hover {
 
 .hidden {
     display: none;
+    
   }
 
 #otherSettings {
@@ -477,8 +536,8 @@ button:hover {
 }
 
 #featuresContent p {
-    text-align: left;
-    margin-left: 30px;
+    text-align: center;
+    margin-left: 0px;
     padding-top: 0px;
     padding-bottom: 0px;
     margin-top: 0px;
@@ -486,11 +545,18 @@ button:hover {
 }
 
 #featuresContent h4 {
-    text-align: left;
+   
+    text-align: center;
     padding-top: 20px;
     padding-bottom: 3px;
     margin-top: 0px;
     margin-bottom: 0px;
+}
+
+#featuresContent h2 {
+
+     text-decoration: underline;
+
 }
 
 #featuresContent button {
@@ -517,6 +583,7 @@ button:hover {
 #changelogContent h1 {
     display: block;
     padding-top: 20px;
+    
 }
 
 #changelogList {
@@ -568,5 +635,20 @@ button:hover {
 .fade-in {
     animation: fadeIn 0.5s forwards; /* 0.5 seconds for the fade-in effect */
 }
+
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}
+
+.fade-out {
+    animation: fadeOut 0.5s forwards; /* 0.5 seconds for the fade-in effect */
+}
+
 
 

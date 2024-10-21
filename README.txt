@@ -1,31 +1,26 @@
 Google sheets to dymo (STD)
 
-An Electron app powered by 
-  Express
-  Node
+Install NodeJS, this will include npm (Node Package Manager)
 
-Function
-  Fetch row data from spreadsheets available in a users
-  Google Drive, then print that data on a DYMO label.
+You have to create a service account through Google Developers
+follow this: https://developers.google.com/workspace/guides/create-credentials
 
-To Build From Source
-  Obtain OAuth2 credentials from the Google Cloud Console
-    as a .json, name it credentials.json and put it in the
-    source directory
-  Make sure NodeJS is installed
-  Open terminal in source directory
-    # npm install
-    # npm run build
+Then download the credential file as credentials.json 
+and replace the existing credentials.json file
 
-  The applications setup.exe is now available in ./dist
-  this .exe can be distributed on a USB or made available
-  for download.
+git clone https://github.com/thedeserttoad/std 
+open terminal at folder location
+npm install
+npm start
 
-ToDo
-  Implement MessageMedia API for automated customer texting
-  General polish
-  Refactor spaghetti code
+in a browser, goto
+http://localhost:3000
 
 
-
-
+todo
+  - fix base64 image loading, can be done in file but that's gross
+  - aesthetics
+  
+Known bugs
+- Row form input broken after adding spreadsheets
+- Available spreadsheets form wider after opening spreadsheet management
