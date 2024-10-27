@@ -1,6 +1,7 @@
 const path = require('path');
 const { ipcRenderer, shell, app } = require('electron');
 const { PDFDocument } = require('pdf-lib');
+const sheetBool;
 
 const printPDF = async (pdfs) => {
   console.log("pdfs array = ", pdfs);
@@ -109,21 +110,43 @@ const printLabel = async (dataObject) => {
 
       console.log("ORDERED GLOBAL DATA: ", orderedGlobalData);
 
-      const data = [
-        { label: dataLabel[1], value: orderedGlobalData[0] },  // Full Name
-        { label: dataLabel[6], value: "" + orderedGlobalData[1] },  // Quote
-        { label: dataLabel[2], value: orderedGlobalData[2] },  // Contact
-        { label: dataLabel[7], value: "" + orderedGlobalData[3] },  // Deposit
-        { label: dataLabel[3], value: orderedGlobalData[4] },  // Model
-        { label: dataLabel[5], value: orderedGlobalData[5] },  // Colour
-        { label: dataLabel[4], value: orderedGlobalData[6] },  // Part
-        { label: dataLabel[9], value: orderedGlobalData[7] },  // Warranty
-        { label: dataLabel[10], value: orderedGlobalData[8] }, // Date Ordered
-        { label: dataLabel[11], value: orderedGlobalData[9] }, // Date Texted
-        { label: dataLabel[13], value: orderedGlobalData[10] },// Notes
-        { label: dataLabel[12], value: "" }                   // Reminders (no value)
-      ];
 
+      if (!sheetBool) {
+        //Accessories Data
+        const data = [
+          { label: dataLabel[1], value: orderedGlobalData[0] },  // Full Name
+          { label: dataLabel[6], value: "" + orderedGlobalData[1] },  // Quote
+          { label: dataLabel[2], value: orderedGlobalData[2] },  // Contact
+          { label: dataLabel[7], value: "" + orderedGlobalData[3] },  // Deposit
+          { label: dataLabel[3], value: orderedGlobalData[4] },  // Model
+          { label: dataLabel[5], value: orderedGlobalData[5] },  // Colour
+          { label: dataLabel[4], value: orderedGlobalData[6] },  // Part
+          { label: dataLabel[9], value: orderedGlobalData[7] },  // Warranty
+          { label: dataLabel[10], value: orderedGlobalData[8] }, // Date Ordered
+          { label: dataLabel[11], value: orderedGlobalData[9] }, // Date Texted
+          { label: dataLabel[13], value: orderedGlobalData[10] },// Notes
+          { label: dataLabel[12], value: "" }                   // Reminders (no value)
+        ];
+      }
+      else {
+        //Parts Data
+        const data = [
+          { label: dataLabel[1], value: orderedGlobalData[0] },  // Full Name
+          { label: dataLabel[6], value: "" + orderedGlobalData[1] },  // Quote
+          { label: dataLabel[2], value: orderedGlobalData[2] },  // Contact
+          { label: dataLabel[7], value: "" + orderedGlobalData[3] },  // Deposit
+          { label: dataLabel[3], value: orderedGlobalData[4] },  // Model
+          { label: dataLabel[5], value: orderedGlobalData[5] },  // Colour
+          { label: dataLabel[4], value: orderedGlobalData[6] },  // Part
+          { label: dataLabel[9], value: orderedGlobalData[7] },  // Warranty
+          { label: dataLabel[10], value: orderedGlobalData[8] }, // Date Ordered
+          { label: dataLabel[11], value: orderedGlobalData[9] }, // Date Texted
+          { label: dataLabel[13], value: orderedGlobalData[10] },// Notes
+          { label: dataLabel[12], value: "" }                   // Reminders (no value)
+        ];
+
+
+      } 
       console.log("FULL DATA[]: ", data);
       // Generate the label and store the generated PDF
       const pdf = await generateLabel(data);
@@ -322,5 +345,6 @@ const generateLabel = async (data) => {
 
 module.exports = {
   printLabel,
-  printPDF
+  printPDF,
+  sheetBool,
 };

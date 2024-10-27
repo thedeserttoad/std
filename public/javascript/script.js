@@ -547,7 +547,7 @@ document.getElementById('confirmSpreadsheetBtn').onclick = function () {
   const content = document.querySelector('.content');
   const formRect = content.getBoundingClientRect();
   const contentBackground = document.getElementById('contentBackground');
-
+  let sheetBool = require('./printLogic.js');
   // Check if a spreadsheet is selected
 
   
@@ -568,6 +568,7 @@ document.getElementById('confirmSpreadsheetBtn').onclick = function () {
       selectedSpreadsheetId = spreadsheetId; // Store the selected spreadsheet ID UNCOMMENT
       console.log(`Selected Spreadsheet: ${selectedSpreadsheet.name}, ID: ${spreadsheetId}`); //UNCOMMENT
       
+      if (selectedSpreadsheet.name.toLowerCase().includes("parts") { sheetBool = true; } else { sheetBool = false; } 
       
       // Hide the available spreadsheets form
       document.getElementById('availableSpreadsheets').style.display = 'none';
