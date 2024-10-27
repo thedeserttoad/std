@@ -568,8 +568,8 @@ document.getElementById('confirmSpreadsheetBtn').onclick = function () {
       selectedSpreadsheetId = spreadsheetId; // Store the selected spreadsheet ID UNCOMMENT
       console.log(`Selected Spreadsheet: ${selectedSpreadsheet.name}, ID: ${spreadsheetId}`); //UNCOMMENT
       
-      if (selectedSpreadsheet.name.toLowerCase().includes("parts") { sheetBool = true; } else { sheetBool = false; } 
-      
+      sheetBool = selectedSpreadsheet.name.toLowerCase().includes("parts");
+
       // Hide the available spreadsheets form
       document.getElementById('availableSpreadsheets').style.display = 'none';
       document.getElementById('spreadsheetForm').style.display = 'none'; // Hide the spreadsheet form
