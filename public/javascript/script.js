@@ -176,6 +176,11 @@ ipcRenderer.on('auth-failure', (event, error) => {
 
 //Keeps window to a minimum size, 
 //currently bugs out when inspector is opened and window is too small
+/*
+ * Change this to display the splash when below a certain window size,
+ * avoiding resizing will prevent the bug, displaying the splash Keeps
+ * the UI clean, avoiding the scroll bar glitch
+ *
 window.addEventListener('resize', function() {
   if (window.innerWidth <= 600) {
       window.resizeTo(650, window.innerWidth);
@@ -186,7 +191,7 @@ window.addEventListener('resize', function() {
       windowHeight = window.height;
   }
 });
-
+*/
 // Load spreadsheets from localStorage
 function loadSpreadsheetsFromStorage() {
   const storedSpreadsheets = localStorage.getItem('spreadsheets');
