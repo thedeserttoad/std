@@ -11,12 +11,14 @@ const { ipcRenderer } = require('electron');
 const path = require("path");
 const { checks } = require('googleapis/build/src/apis/checks');
 
+
 let printLabel, img64;                            //printLogic.js
 let checkAuthentication, authenticateWithGoogle;  //auth.js
 let fadeIn, fadeOut, animateBackground;           //animations.js
 let UpdateSpreadsheets, fetchAvailableSpreadsheets//sheets.js
 let UpdateAccountStatus, isLoggedIn, setStatus    //account.js
 
+let appPath;
 let globalData;
 let globalFormattedData;
 let spreadsheets = [];
@@ -52,20 +54,24 @@ const header = document.getElementById("header");
 const headerImage = document.getElementById("logoimg");
 
 //Settings
+const settingsPage = document.getElementById("SettingsPage");
 const loginButton = document.getElementById("loginButton");
 const refreshSpreadsheetsButton = document.getElementById("refreshButton");
 const changelogButton = document.getElementById("changelogButton");
 const featuresButton = document.getElementById("featuresButton");
 
 //Changelog
+const changelogPage = document.getElementById("ChangelogPage");
 const changelog = document.getElementById("changelogContent");
 const changelogBackButton = document.getElementById("changelogBackBtn");
 
 //Features
+const featuresPage = document.getElementById("FeaturesPage");
 const features = document.getElementById("featuresContent");
 const featuresBackButton = document.getElementById("backBtn");
 
 //Row Input Form
+const rowFormPage = document.getElementById("RowFormPage");
 const rowFormContainer = document.getElementById("formContainer");
 const rowForm = document.getElementById("rowForm");
 const rowFormMonthSelection = document.getElementById("month");
@@ -93,8 +99,8 @@ const labelContent = document.getElementById("labelContent");
 
 // Async function to require modules safely
 (async () => {
-  const appPath = await ipcRenderer.invoke('get-app-path');
-  
+  appPath = await ipcRenderer.invoke('get-app-path');
+
   try {
     // Require printLogic.js
     const printLogic = require(path.join(appPath, 'public', 'javascript', 'printLogic.js'));
@@ -141,7 +147,7 @@ const labelContent = document.getElementById("labelContent");
 
   try {
     // Require animations.js
-    const animations = require(path.join(appPath, 'public', 'javascript', 'account.js'));
+    const animations = require(path.join(appPath, 'public', 'javascript', 'animations.js'));
     fadeIn = animations.fadeIn;
     fadeOut = animations.fadeOut;
     animateBackground = animations.animateBackground;
@@ -276,18 +282,24 @@ window.onload = function () {
   closeModal();
   loadSpreadsheetsFromStorage();
 
-  // Initially hide the spreadsheet management form
-  document.getElementById('spreadsheetForm').style.display = 'none'; // Hide it on load
+  hideSettingsPage();
+  hideChangelogPage();
+  hideFeaturesPage();
+  hideRowFormPage();
+  
+  showDefaultPage();
 };
 
 
 window.onload = async function() {
+  appPath = await ipcRenderer.invoke('get-app-path');
+
   const splash = document.getElementById('splash');
   const background = document.getElementById('splashBackground');
 
   // Start the animation after a 1-second delay
   setTimeout(() => {
-      animations.fadeOut(splash); // Trigger the animation
+      fadeOut(splash); // Trigger the animation
   }, 1000); // Delay before starting the animation
 
   // Hide the splash screen after the animation completes (3 seconds)
@@ -297,16 +309,16 @@ window.onload = async function() {
 };
 
 
-document.addEventListener('DOMContentLoaded', function () {
-  
+document.addEventListener('DOMContentLoaded', function () { 
   UpdateAccountStatus();
   UpdateSpreadsheets();
 });
 
 document.addEventListener('DOMContentLoaded', function () {
   // Import the image data from image.js
-  const backgroundImgPath = require('../images/image.js');
-  const movingBackgroundImgPath = require('../images/backgroundImage.js'); // Adjust the path as needed
+  const backgroundImgPath = require(path.join(appPath, 'public', 'images', 'image.js'));
+  const movingBackgroundImgPath = require(path.join(appPath, 'public', 'images', 'backgroundImage.js'));
+  
   const img = backgroundImgPath.img64; // Access the Base64 string
   const backImg = movingBackgroundImgPath.img64;
 
@@ -433,9 +445,11 @@ document.addEventListener('DOMContentLoaded', function () {
 /****************** START DEFAULT PAGE ******************************/
 
 function showDefaultPage() {
-
+  defaultPage.style.display = 'flex';
 }
-function hideDefaultPage() {}
+function hideDefaultPage() {
+  defaultPage.style.display = 'none';
+}
 
 function updateSpreadsheetDropdown() {
   const dropdown = document.getElementById('spreadsheetSelect');
@@ -568,8 +582,12 @@ document.getElementById('confirmSpreadsheetBtn').onclick = async function () {
 /****************** END DEFAULT PAGE ********************************/
 /****************** START SETTINGS PAGE *****************************/
 
-function showSettingsPage() {}
-function hideSettingsPage() {}
+function showSettingsPage() {
+
+}
+function hideSettingsPage() {
+  settingsPage.style.display = 'none';
+}
 
 document.getElementById('loginBtn').onclick = async function () {
   console.log("Login button pushed");
@@ -652,14 +670,22 @@ changelogButton.addEventListener('click', function () {
 /****************** END SETTINGS PAGE *******************************/
 /****************** START FEATURES PAGE *****************************/
 
-function showFeaturesPage() {}
-function hideFeaturesPage() {}
+function showFeaturesPage() {
+  featuresPage.style.display = 'flex';
+}
+function hideFeaturesPage() {
+  featuresPage.style.display = 'none';
+}
 
 /****************** END FEATURES PAGE *******************************/
 /****************** START CHANGELOG PAGE ****************************/
 
-function showChangelogPage() {}
-function hideChangelogPage() {}
+function showChangelogPage() {
+  changelogPage.style.display = 'flex';
+}
+function hideChangelogPage() {
+  changelogPage.style.display = 'none';
+}
 
 changelogButton.addEventListener('click', function () {
   loadChangelog();
@@ -698,11 +724,15 @@ changelogBackButton.addEventListener('click', function() {
        
   });
 
-/****************** END FEATURES PAGE ******************************/
+/****************** END CHANGELOG PAGE ******************************/
 /****************** START FORM PAGE ********************************/
 
-function showRowFormPage() {}
-function hideRowFormPage() {}
+function showRowFormPage() {
+  rowFormPage.style.display = 'flex';
+}
+function hideRowFormPage() {
+  rowFormPage.style.display = 'none';
+}
 
 // On form submit, fetch row data
 document.getElementById('rowForm').onsubmit = async (event) => {
@@ -803,9 +833,6 @@ featuresFromRowFormBtn.addEventListener('click', function() {
 });
 
 /****************** MODAL PAGE ********************************/
-function showModalPage() {}
-function hideModalPage() {}
-
 function showModal() {
   modal = document.getElementById('modal');
   modal.style.display = 'block';
@@ -814,7 +841,7 @@ function showModal() {
 
 // Close modal function
 function closeModal() {
-  animations.fadeOut(modal);
+  fadeOut(modal);
 }
 
 // Function to generate HTML table
