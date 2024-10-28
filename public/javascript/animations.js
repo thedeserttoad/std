@@ -62,3 +62,8 @@ function animateBackground(ctx, pattern, canvas) {
   requestAnimationFrame(draw);
 }
 
+module.exports = {
+  fadeIn,
+  fadeOut,
+  animateBackground
+};
