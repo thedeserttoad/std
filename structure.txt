@@ -1,0 +1,10 @@
+Script JS Structure
+
+Declarations
+
+DOMContentLoaded
+
+window.onload
+
+Button Handling
+
