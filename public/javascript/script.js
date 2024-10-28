@@ -15,7 +15,6 @@ const defaultWidth = '280px';
 const defaultSettingsPageHeight = '490px';
 
 
-
 let windowHeight = window.height;
 let windowWidth = window.width;
 
@@ -105,15 +104,17 @@ window.addEventListener('resize', function() {
 
 document.addEventListener('DOMContentLoaded', function () {
   // Import the image data from image.js
-  const backgroundImgPath = require('./public/images/image.js'); // Adjust the path as needed
+  const backgroundImgPath = require('./public/images/image.js');
+  const movingBackgroundImgPath = require('./public/images/backgroundImage.js'); // Adjust the path as needed
   const img = backgroundImgPath.img64; // Access the Base64 string
+  const backImg = movingBackgroundImgPath.img64;
 
   // Get the canvas element
   const canvas = document.getElementById('backgroundCanvas');
   const ctx = canvas.getContext('2d');
 
   const image = new Image();
-  image.src = img; // Load the Base64 image
+  image.src = backImg; // Load the Base64 image
 
   let pattern; // Declare the pattern variable outside to use later
 
@@ -417,11 +418,17 @@ document.getElementById('rowForm').onsubmit = async (event) => {
   // Display the formatted data in the modal
   //document.getElementById('modalData').textContent = JSON.stringify(formattedData, null, 2);
   // Insert the generated table HTML into the modal
-  document.getElementById('modalData').innerHTML = generateTableHTML(partialData);
+  let = document.getElementById('modalData').innerHTML = generateTableHTML(partialData);
+  showModal();
+};
+
+function showModal() {
+
   const modal = document.getElementById('modal');
    modal.style.display = 'block';
   fadeIn(modal);
-};
+
+}
 
 // Function to generate HTML table
 function generateTableHTML(data) {
@@ -540,23 +547,21 @@ function loadSpreadsheetsFromStorage() {
 }
 
 // Event handler for the confirm button
-document.getElementById('confirmSpreadsheetBtn').onclick = function () {
+document.getElementById('confirmSpreadsheetBtn').onclick = async function () {
   const selectedDropdown = document.getElementById('spreadsheetSelect');
   const selectedId = selectedDropdown.value; // Get the ID from the dropdown UNCOMMENT
   const formContainer = document.getElementById('formContainer');
   const content = document.querySelector('.content');
   const formRect = content.getBoundingClientRect();
   const contentBackground = document.getElementById('contentBackground');
-  let sheetBool = require('./printLogic.js');
-  // Check if a spreadsheet is selected
+  const appPath = await ipcRenderer.invoke('get-app-path');
 
-  
   if (selectedId) {
     console.log('Spreadsheets:', spreadsheets);
-
     // Find the spreadsheet object that matches the selected ID
     const selectedSpreadsheet = spreadsheets.find(spreadsheet => spreadsheet.id === selectedId); //UNCOMMENT
-    
+    const { isTrue, isFalse, SheetSelection } = require(path.join(appPath, 'public', 'javascript', 'sheetbool.js')); // Adjust the path as necessary
+
     
     if (selectedSpreadsheet) {
          
@@ -567,8 +572,8 @@ document.getElementById('confirmSpreadsheetBtn').onclick = function () {
       const spreadsheetId = selectedSpreadsheet.id; // Get the ID from the selected object UNCOMMENT
       selectedSpreadsheetId = spreadsheetId; // Store the selected spreadsheet ID UNCOMMENT
       console.log(`Selected Spreadsheet: ${selectedSpreadsheet.name}, ID: ${spreadsheetId}`); //UNCOMMENT
-      
-      sheetBool = selectedSpreadsheet.name.toLowerCase().includes("parts");
+
+      if(selectedSpreadsheet.name.toLowerCase().includes("parts")) { isTrue(); } else { isFalse(); }
 
       // Hide the available spreadsheets form
       document.getElementById('availableSpreadsheets').style.display = 'none';
@@ -641,6 +646,7 @@ document.getElementById('backToSpreadsheetBtn').onclick = function () {
 };
 
 document.getElementById('toggleManageButton').addEventListener('click', function () {
+//  location.reload();
   const contentBackground = document.getElementById("contentBackground")
   const form = document.getElementById('spreadsheetForm');
   const availableForm = document.getElementById('availableSpreadsheets');
@@ -648,8 +654,14 @@ document.getElementById('toggleManageButton').addEventListener('click', function
   const featuresBtn = document.getElementById('featuresBtn');
   const changelogBtn = document.getElementById('changelogBtn');
 
+  // Determine if the form is currently visible
+  const isFormVisible = window.getComputedStyle(form).display !== 'none';
+
+
   // Toggle the visibility of the spreadsheet management form
-  if (form.style.display === 'none' || form.style.display === '') {
+  if (!isFormVisible) {
+    console.log("Current form display: ", form.style.display);
+    console.log("Switching to settings");
     contentBackground.style.height = defaultSettingsPageHeight;
     contentBackground.style.top = '-28%';
     availableForm.style.display = 'none';
@@ -658,15 +670,16 @@ document.getElementById('toggleManageButton').addEventListener('click', function
     featuresBtn.style.display = 'flex';
     this.textContent = 'Back'; // Update button text
     fadeIn(form);
-     ;
+    
 
     fadeIn(otherSettingsForm);
     form.style.display = 'flex';
     otherSettingsForm.style.display = 'flex';
-     ;
-
+    
 
   } else {
+    console.log("Current form display: ", form.style.display);
+    console.log("Switching to default");
     contentBackground.style.height = defaultFrontPageHeight;
     contentBackground.style.top = '-40%';
     otherSettingsForm.style.display = 'none'; // hide border on run
@@ -674,7 +687,7 @@ document.getElementById('toggleManageButton').addEventListener('click', function
     this.textContent = 'Settings';
     fadeIn(availableForm);
     availableForm.style.display = 'flex';
-     ;
+    
 
   }
 });
@@ -847,21 +860,6 @@ document.addEventListener('DOMContentLoaded', function () {
     openFeatures();
   });
   
-
-  function backToSettings() {
-
-    // Hide the changelog and show the settings form
-    changelogContent.style.display = 'none';  // Hide changelog
-    settingsForm.style.display = 'flex';  // Show settings
-    backBtn.style.display = 'none';  // Hide back button
-    featuresContent.style.display = 'none';
-    hideSettingsButton.style.display = 'flex';
-    changelogBtn.style.display = 'flex';
-    featuresBtn.style.display = 'flex';
-    betaText.style.display = 'flex';
-
-  }
-
   function openFeatures() {
     document.getElementById('formContainer').style.display = 'none'; 
     contentBackground.style.height = '505px';
@@ -978,21 +976,14 @@ window.onload = async function() {
   const splash = document.getElementById('splash');
   const background = document.getElementById('splashBackground');
 
-  const w = window.width;
-  const h = window.height;
-
-  //splash.transform.translateY(-200 + 'px');
-  splash.style.top = '-400wh';
-  //splash.style.left = w / 4;
-
   // Start the animation after a 1-second delay
   setTimeout(() => {
-      background.classList.add('splashanim'); // Trigger the animation
+      fadeOut(splash); // Trigger the animation
   }, 1000); // Delay before starting the animation
 
   // Hide the splash screen after the animation completes (3 seconds)
   setTimeout(() => {
       splash.style.display = 'none'; // Hide the splash screen
-  }, 4000); // Total delay (1000ms + 3000ms animation duration)
+  }, 4000); // Total delay (1000ms + 3000ms animation duration) 
 };
 

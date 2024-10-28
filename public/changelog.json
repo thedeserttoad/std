@@ -1,8 +1,8 @@
 {
   "changelog": [
     {
-      "version": "Indev 1.7",
-      "description": "Added animations throughout the app, menu bar is now hidden, smoothing, adjustments, and numerous other tweaks and bug fixes."
+      "version": "1.0",
+      "description": "Added logic that allows for truncation ('...' to be added) when data is too long, graphical improvements, general smoothing, tweaks and bug fixes."
     },
     {
       "version": "Beta v1.0.2 TC (Testing Candidate)",
