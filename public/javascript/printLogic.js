@@ -211,31 +211,36 @@ const generateLabel = async (data) => {
       format: [36, 89],
     });
 
-    // Adjustments for misalignment
-    const xOffset = 1;   // 1mm shift to the right
-    const yOffset = 1.5; // 1.5mm shift down
+    //Scale factor
+    const scaleFactor = 0.95;
 
+    // Adjustments for misalignment
+    const xOffset = 0.5; //shift right
+    const yOffset = 0.5; //shift down
+    
     // Draw a black border around the label
-    const borderX = 0.5 + xOffset;
-    const borderY = 0.5 + yOffset;
-    const borderWidth = 89 - 7.5;
-    const borderHeight = 36 - 3;
+    const borderLineWidth = 1;
+    const borderX = 0 + (borderLineWidth / 2);// + xOffset;
+    const borderY = 0 + (borderLineWidth / 2);// + yOffset;
+    const borderWidth = 89 * scaleFactor;
+    const borderHeight = 36 * scaleFactor;
 
     pdf.addImage(backgroundImage, 'JPEG', 53, 23, 33, 13);
+    //pdf.addImage(backgroundImage, 'JPEG', 0, 0, borderWidth, borderHeight);
     
     // Set the border color (black)
     pdf.setDrawColor(0);
-    pdf.setLineWidth(1);
-    pdf.rect(borderX, borderY, borderWidth, borderHeight, 'S');
+    pdf.setLineWidth(borderLineWidth);
+    //pdf.rect(borderX, borderY, borderWidth, borderHeight, 'S');
 
     pdf.setFontSize(8.5);
-    const fullWidth = borderWidth - 4; // Leave some padding from both sides
+    const fullWidth = borderWidth - 2; // Leave some padding from both sides
     const columnWidth = 44;  // Total width for one column (either left or right)
     const lblColumnWidth = 20;  // Width of the label column
 
-    const lblLeftColumnX = 1.75 + xOffset;
+    const lblLeftColumnX = 1 + xOffset;
     const dataLeftColumnX = lblLeftColumnX + lblColumnWidth;
-    const lblRightColumnX = fullWidth / 2 + 6.5;
+    const lblRightColumnX = fullWidth / 2 + 6;
     const dataRightColumnX = lblRightColumnX + lblColumnWidth;
 
     let currentY = 3.75 + yOffset;
@@ -299,14 +304,14 @@ const generateLabel = async (data) => {
 // Calculate starting position for lines based on the label
         const initialLineXStart = lblLeftColumnX + pdf.getTextWidth("REMINDERS: ") + 0.5; // Starting position after the label
 
-// Draw 3 horizontal lines for reminders
-for (let j = 0; j < 3; j++) {
-    const lineXStart = initialLineXStart + (j * (lineWidth + 2)); // Increment X for each line
-    pdf.line(lineXStart, lineYStart, lineXStart + lineWidth, lineYStart); // Keep Y position the same
-}
+        // Draw 3 horizontal lines for reminders
+        for (let j = 0; j < 3; j++) {
+            const lineXStart = initialLineXStart + (j * (lineWidth + 2)); // Increment X for each line
+            pdf.line(lineXStart, lineYStart, lineXStart + lineWidth, lineYStart); // Keep Y position the same
+        }
 
-// Optional: Adjust the currentY if you need space below the lines
-currentY += 10; // Modify this if you need a different gap below
+        // Optional: Adjust the currentY if you need space below the lines
+        currentY += 10; // Modify this if you need a different gap below
 
       }
 
@@ -317,7 +322,7 @@ currentY += 10; // Modify this if you need a different gap below
         const rightDataText = data[i + 1].value;
 
         const rightLabelWidth = pdf.getTextWidth(rightLabelText) + 0.5;
-        const rightDataWidth = columnWidth - rightLabelWidth;
+        const rightDataWidth = leftLabelWidth + columnWidth - rightLabelWidth + 1000;//+ 10;
 
         // Print right label
         pdf.setFontSize(7.5);
@@ -328,7 +333,7 @@ currentY += 10; // Modify this if you need a different gap below
         pdf.setFontSize(8.5);
         pdf.setFont("helvetica", "normal");
         const truncatedRightDataText = truncateText(rightDataText, rightDataWidth);
-        pdf.text(truncatedRightDataText, lblRightColumnX + rightLabelWidth - 1, currentY);
+        pdf.text(truncatedRightDataText, lblRightColumnX + rightLabelWidth /*- 1*/, currentY);
         rightRowHeight += pdf.getTextDimensions(truncatedRightDataText).h; // Adjust height based on truncated data
       }
 
@@ -337,6 +342,7 @@ currentY += 10; // Modify this if you need a different gap below
       currentY += Math.max(leftRowHeight, rightRowHeight) + 1;
     }
 
+    
     return pdf;
   } catch (error) {
     console.log("Error generating label", error);

@@ -1,186 +1,96 @@
-//rescript.js
-
-
-/****************** GLOBAL DECLARATIONS ***********************/
-
-const defaultFrontPageHeight = '340px';
-const defaultWidth = '280px';
-const defaultSettingsPageHeight = '490px';
-
-const { ipcRenderer } = require('electron');
-const path = require("path");
+const { jsPDF } = window.jspdf;
+const { ipcRenderer, remote } = require('electron');
 const { checks } = require('googleapis/build/src/apis/checks');
-
-
-let printLabel, img64;                            //printLogic.js
-let checkAuthentication, authenticateWithGoogle;  //auth.js
-let fadeIn, fadeOut, animateBackground;           //animations.js
-let UpdateSpreadsheets, fetchAvailableSpreadsheets//sheets.js
-let UpdateAccountStatus, isLoggedIn, setStatus    //account.js
-
-let appPath;
 let globalData;
 let globalFormattedData;
 let spreadsheets = [];
 let selectedSpreadsheetId = null;
-let inRowForm = false;
+const backgroundImg = null;
+let printLabel, img64, checkAuthentication, authenticateWithGoogle;
+var inRowForm = false;
 let isSignedIn = false;
-let fromSheetSelection = false;
+var fromSheetSelection = false;
+const defaultFrontPageHeight = '340px';
+const defaultWidth = '280px';
+const defaultSettingsPageHeight = '490px';
 
 
 let windowHeight = window.height;
 let windowWidth = window.width;
 
-/******************* HTML DECLARATIONS ***********************/
-
-//Splash
-const splashContainer = document.getElementById("splash");
-const splashBackground = document.getElementById("splashBackground");
-const splashImage = document.getElementById("splashImage");
-
-//Background
-const backgroundContainer = document.getElementById("background");
-const backgroundImage = document.getElementById("backgroundImg");
-const backgroundCanvas = document.getElementById("backgroundCanvas");
-
-//Content Background
-const contentBackground = document.getElementById("contentBackground");
-
-//Default page
-const defaultPage = document.getElementById("DefaultPage");
-
-//Header
-const header = document.getElementById("header");
-const headerImage = document.getElementById("logoimg");
-
-//Settings
-const settingsPage = document.getElementById("SettingsPage");
-const loginButton = document.getElementById("loginButton");
-const refreshSpreadsheetsButton = document.getElementById("refreshButton");
-const changelogButton = document.getElementById("changelogButton");
-const featuresButton = document.getElementById("featuresButton");
-
-//Changelog
-const changelogPage = document.getElementById("ChangelogPage");
-const changelog = document.getElementById("changelogContent");
-const changelogBackButton = document.getElementById("changelogBackBtn");
-
-//Features
-const featuresPage = document.getElementById("FeaturesPage");
-const features = document.getElementById("featuresContent");
-const featuresBackButton = document.getElementById("backBtn");
-
-//Row Input Form
-const rowFormPage = document.getElementById("RowFormPage");
-const rowFormContainer = document.getElementById("formContainer");
-const rowForm = document.getElementById("rowForm");
-const rowFormMonthSelection = document.getElementById("month");
-const rowFormRowSelection = document.getElementById("rowIndex");
-const rowFormFeaturesButton = document.getElementById("rowFormFeaturesBtn");
-const rowFormBackButton = document.getElementById("backToSpreadsheetBtn");
-
-//Modal
-const modal = document.getElementById("modal");
-const modalContent = document.getElementById("modalContent");
-const printDataButton = document.getElementById("printDataButton");
-
-//Footer
-const footer = document.getElementById("footer");
-
-//Notifications
-const notification = document.getElementById("notification");
-
-//Label
-const label = document.getElementById("labelPreview");
-const labelContent = document.getElementById("labelContent");
-
-/**************** END DECLARATIONS ***************************/
-/**************** START MODULE LOADING ***********************/
-
-// Async function to require modules safely
-(async () => {
-  appPath = await ipcRenderer.invoke('get-app-path');
-
-  try {
-    // Require printLogic.js
-    const printLogic = require(path.join(appPath, 'public', 'javascript', 'printLogic.js'));
-    printLabel = printLogic.printLabel;
-  } catch (error) {
-    console.error("Error requiring printLogic.js:", error);
-  }
-
-  try {
-    // Require image.js
-    const image = require(path.join(appPath, 'public', 'images', 'image.js'));
-    img64 = image.img64;
-  } catch (error) {
-    console.error("Error requiring image.js:", error);
-  }
-
-  try {
-    // Require auth.js
-    const auth = require(path.join(appPath, 'public', 'javascript', 'auth.js'));
-    checkAuthentication = auth.checkAuthentication;
-    authenticateWithGoogle = auth.authenticateWithGoogle;
-  } catch (error) {
-    console.error("Error requiring auth.js:", error);
-  }
-
-  try {
-    // Require sheets.js
-    const sheets = require(path.join(appPath, 'public', 'javascript', 'sheets.js'));
-    fetchAvailableSpreadsheets = sheets.fetchAvailableSpreadsheets;
-    UpdateSpreadsheets = sheets.UpdateSpreadsheets;
-  } catch (error) {
-    console.error("Error requiring sheets.js:", error);
-  }
-
-  try {
-    // Require account.js
-    const account = require(path.join(appPath, 'public', 'javascript', 'account.js'));
-    UpdateAccountStatus = account.UpdateAccountStatus;
-    isLoggedIn = account.isLoggedIn;
-    setStatus = account.setStatus;
-  } catch (error) {
-    console.error("Error requiring account.js:", error);
-  }
-
-  try {
-    // Require animations.js
-    const animations = require(path.join(appPath, 'public', 'javascript', 'animations.js'));
-    fadeIn = animations.fadeIn;
-    fadeOut = animations.fadeOut;
-    animateBackground = animations.animateBackground;
-  } catch (error) {
-    console.error("Error requiring animations.js:", error);
-  }
-})();
-
-/*************** END MODULE LOADING **************************/
-/*************** START IPC RENDERER FUNCTIONS ****************/
-
-ipcRenderer.on('auth-success', (event, token) => {
-  globalToken = token; // Store the token if needed
-  showNotification('Successfully authenticated with Google!');
-  console.log('OAuth Token:', token);
+document.addEventListener('DOMContentLoaded', function () {
+  const otherSettingsForm = document.getElementById('otherSettings');
+  otherSettingsForm.style.display = 'none';  
 });
 
-
-ipcRenderer.on('auth-failure', (event, error) => {
-  showNotification('Authentication failed. Please try again.');
-  console.error('OAuth2 Authentication failed:', error);
+document.addEventListener('DOMContentLoaded', function () {
+  UpdateAccountStatus();
+    UpdateSpreadsheets();
 });
 
-/*************** END IPC RENDERER FUNCTIONS *****************/
-/*************** START UTILITY FUNCTIONS ********************/
+function fadeIn(button) {
+    button.style.display = 'flex'; // Make the button visible
+    button.classList.remove('fade-out'); // Remove fade-out class if it exists
+    button.classList.add('fade-in'); // Add fade-in class
 
-//Keeps window to a minimum size, 
-//currently bugs out when inspector is opened and window is too small
-/*
- * Change this to display the splash when below a certain window size,
- * avoiding resizing will prevent the bug, displaying the splash Keeps
- * the UI clean, avoiding the scroll bar glitch
- *
+    setTimeout(() => {
+        button.classList.remove('fade-in'); // Reset for future use
+    }, 500);
+}
+
+function fadeOut(button) {
+  
+    button.classList.remove('fade-in'); // Remove fade-in class
+    button.classList.add('fade-out'); // Add fade-out class
+
+    // Hide the button after the animation completes
+    setTimeout(() => {
+        button.style.display = 'none';
+    }, 500); // Match this to your animation duration
+}
+
+function animateBackground(ctx, pattern, canvas) {
+  let offsetX = -50; // Initial X offset for scrolling
+  const speed = 1;  // Speed of the background movement
+
+  function draw() {
+    // Clear the canvas for each frame to prevent overlap
+    ctx.clearRect(0, 0, screen.width * 2, canvas.height);
+
+    // Save the context state before applying translation
+    ctx.save();
+
+    // Apply translation to create the scrolling effect
+    ctx.translate(offsetX, 0);
+    ctx.fillStyle = '#cce6ff';
+    ctx.fillRect(offsetX, 0, screen.width*2, canvas.height);
+    ctx.fillRect(offsetX + (screen.width * 2), 0, screen.width*2, canvas.height);
+
+    // Fill the entire canvas with the background pattern
+    ctx.fillStyle = pattern;
+    // Draw two patterns side by side to create the loop
+    ctx.fillRect(offsetX, 0, screen.width * 2, canvas.height); // First pattern
+    ctx.fillRect(offsetX + (screen.width * 2), 0, screen.width * 2, canvas.height); // First pattern
+
+    // Restore the context state
+    ctx.restore();
+
+    // Update the X offset to create scrolling motion
+    offsetX -= speed;
+
+    // Reset the offset to prevent it from becoming too large (looping the pattern)
+    if (offsetX <= -screen.width + 95) {
+      offsetX = 0;
+    }
+
+    // Request the next animation frame
+    requestAnimationFrame(draw);
+  }
+
+  // Start the animation loop
+  requestAnimationFrame(draw);
+}
+
 window.addEventListener('resize', function() {
   if (window.innerWidth <= 600) {
       window.resizeTo(650, window.innerWidth);
@@ -191,139 +101,11 @@ window.addEventListener('resize', function() {
       windowHeight = window.height;
   }
 });
-*/
-// Load spreadsheets from localStorage
-function loadSpreadsheetsFromStorage() {
-  const storedSpreadsheets = localStorage.getItem('spreadsheets');
-  if (storedSpreadsheets) {
-    spreadsheets = JSON.parse(storedSpreadsheets);
-    updateSpreadsheetDropdown();
-  }
-}
-
-function showNotification(message, duration = 3000) {
-  const notification = document.getElementById('notification');
-  notification.textContent = message;
-  notification.classList.remove('hidden');
-  notification.classList.add('show');
-
-  setTimeout(() => {
-    notification.classList.remove('show');
-    notification.classList.add('hidden');
-  }, duration);
-}
-
-function openFeatures() {
-  document.getElementById('formContainer').style.display = 'none'; 
-  contentBackground.style.height = '505px';
-  contentBackground.style.width = '450px';
-  settingsForm.style.display = 'none';  // Hide settings
-  changelogContent.style.display = 'none';  // Show changelog
-  fadeIn(featuresContent);
-  fadeIn(backBtn);
-  backBtn.style.display = 'flex';
-  hideSettingsButton.style.display = 'none';
-    changelogBtn.style.display = 'none';
-  betaText.style.display = 'none';
-}
-
-// Function to fetch the changelog JSON and display it
-function loadChangelog() {
-  fetch('changelog.json') // Fetch the JSON file
-      .then(response => {
-          if (!response.ok) {
-              throw new Error('Network response was not ok');
-          }
-          return response.json(); // Parse the JSON
-      })
-      .then(data => {
-          const changelogList = document.getElementById('changelogList');
-          changelogList.innerHTML = ''; // Clear any existing content
-
-          const item = data.changelog[0];
-          const paragraph = document.createElement('p');
-          paragraph.innerHTML = `<strong>Version ${item.version}:</strong> ${item.description}`;
-          changelogList.appendChild(paragraph);
-      })
-      .catch(error => {
-          console.error('Error fetching changelog:', error);
-      });
-}
-
-/*************** END UTILITY FUNCTIONS **********************/
-/*************** START HELPER FUNCTIONS *********************/
-
-document.addEventListener('DOMContentLoaded', function () {
-  // Grab references to elements you'll work with
-  const changelogBtn = document.getElementById('changelogBtn');
-  const border = document.getElementById('otherSettings');
-  const changelogBackBtn = document.getElementById('changelogBackBtn');
-  const backBtn = document.getElementById('backBtn');
-  const settingsForm = document.getElementById('spreadsheetForm');
-  const changelogContent = document.getElementById('changelogContent');
-  const hideSettingsButton = document.getElementById('toggleManageButton');
-  const featuresBtn = document.getElementById('featuresBtn');
-  const featuresFromRowFormBtn = document.getElementById('rowFormFeaturesBtn')
-  const betaText = document.getElementById('footer');
-  const featuresContent = document.getElementById('featuresContent');
-  const contentBackground = document.getElementById('contentBackground');
-  const formContainer = document.getElementById('formContainer');
-
-  // Initially hide the changelog content and back button
-  changelogContent.style.display = 'none';
-  backBtn.style.display = 'none';
-
-  const defaultFrontPageHeight = '340px';
-  const defaultWidth = '280px';
-  const defaultSettingsPageHeight = '490px';
-});
-
-
-
-/**************** END HELPER FUNCTIONS **********************/
-/**************** START ON-STARTUP **************************/
-
-window.onload = function () {
-  closeModal();
-  loadSpreadsheetsFromStorage();
-
-  hideSettingsPage();
-  hideChangelogPage();
-  hideFeaturesPage();
-  hideRowFormPage();
-  
-  showDefaultPage();
-};
-
-
-window.onload = async function() {
-  appPath = await ipcRenderer.invoke('get-app-path');
-
-  const splash = document.getElementById('splash');
-  const background = document.getElementById('splashBackground');
-
-  // Start the animation after a 1-second delay
-  setTimeout(() => {
-      fadeOut(splash); // Trigger the animation
-  }, 1000); // Delay before starting the animation
-
-  // Hide the splash screen after the animation completes (3 seconds)
-  setTimeout(() => {
-      splash.style.display = 'none'; // Hide the splash screen
-  }, 4000); // Total delay (1000ms + 3000ms animation duration) 
-};
-
-
-document.addEventListener('DOMContentLoaded', function () { 
-  UpdateAccountStatus();
-  UpdateSpreadsheets();
-});
 
 document.addEventListener('DOMContentLoaded', function () {
   // Import the image data from image.js
-  const backgroundImgPath = require(path.join(appPath, 'public', 'images', 'image.js'));
-  const movingBackgroundImgPath = require(path.join(appPath, 'public', 'images', 'backgroundImage.js'));
-  
+  const backgroundImgPath = require('./public/images/image.js');
+  const movingBackgroundImgPath = require('./public/images/backgroundImage.js'); // Adjust the path as needed
   const img = backgroundImgPath.img64; // Access the Base64 string
   const backImg = movingBackgroundImgPath.img64;
 
@@ -446,297 +228,108 @@ document.addEventListener('DOMContentLoaded', function () {
   console.log('Image Source:', img); // Optional: log to verify
 });
 
-/****************** END ON-STARTUP **********************************/
-/****************** START DEFAULT PAGE ******************************/
 
-function showDefaultPage() {
-  defaultPage.style.display = 'flex';
-}
-function hideDefaultPage() {
-  defaultPage.style.display = 'none';
+async function UpdateAccountStatus() {
+  console.log("Reached update function");
+  setStatus();
 }
 
-function updateSpreadsheetDropdown() {
-  const dropdown = document.getElementById('spreadsheetSelect');
-  dropdown.innerHTML = '<option value="">Select a spreadsheet</option>';
-
-  for (const name in spreadsheets) {
-    const option = document.createElement('option');
-    option.value = name;
-    option.textContent = name;
-    dropdown.appendChild(option);
+async function isLoggedIn() {
+  try {
+    const response = await fetch('/api/isAuthenticated');
+    console.log(response);
+  } catch {
+    console.log("Some error", error);
   }
 }
 
-document.getElementById("refreshButton").addEventListener('click', async function(event) {
-  event.preventDefault(); // Prevent the default form submission
-  console.log("Refreshed!");
-//  await isLoggedIn();
-    await UpdateSpreadsheets();
-//    await UpdateAccountStatus();
-});
-
-document.getElementById('toggleManageButton').addEventListener('click', function () {
-  const contentBackground = document.getElementById("contentBackground")
-  const form = document.getElementById('spreadsheetForm');
-  const availableForm = document.getElementById('availableSpreadsheets');
-  const otherSettingsForm = document.getElementById('otherSettings');
-  const featuresBtn = document.getElementById('featuresBtn');
-  const changelogBtn = document.getElementById('changelogBtn');
-
-  // Determine if the form is currently visible
-  const isFormVisible = window.getComputedStyle(form).display !== 'none';
-
-  fadeIn(this);
-
-  // Toggle the visibility of the spreadsheet management form
-  if (!isFormVisible) {
-    console.log("Current form display: ", form.style.display);
-    console.log("Switching to settings");
-    contentBackground.style.height = defaultSettingsPageHeight;
-    contentBackground.style.top = '-28%';
-    availableForm.style.display = 'none';
-    otherSettingsForm.style.display = 'flex';
-    changelogBtn.style.display = 'flex';// show border
-    featuresBtn.style.display = 'flex';
-    this.textContent = 'Back'; // Update button text
-    fadeIn(form);
-    
-
-    fadeIn(otherSettingsForm);
-    form.style.display = 'flex';
-    otherSettingsForm.style.display = 'flex';
-    
-
-  } else {
-    console.log("Current form display: ", form.style.display);
-    console.log("Switching to default");
-    contentBackground.style.height = defaultFrontPageHeight;
-    contentBackground.style.top = '-40%';
-    otherSettingsForm.style.display = 'none'; // hide border on run
-    form.style.display = 'none'; // Hide the form
-    this.textContent = 'Settings';
-    fadeIn(availableForm);
-    availableForm.style.display = 'flex';
-  }
-});
-
-// Event handler for the confirm button
-document.getElementById('confirmSpreadsheetBtn').onclick = async function () {
-  const selectedDropdown = document.getElementById('spreadsheetSelect');
-  const selectedId = selectedDropdown.value; // Get the ID from the dropdown UNCOMMENT
-  const formContainer = document.getElementById('formContainer');
-  const content = document.querySelector('.content');
-  const formRect = content.getBoundingClientRect();
-  const contentBackground = document.getElementById('contentBackground');
-  const appPath = await ipcRenderer.invoke('get-app-path');
-
-  if (selectedId) {
-    console.log('Spreadsheets:', spreadsheets);
-
-    // Find the spreadsheet object that matches the selected ID
-    const selectedSpreadsheet = spreadsheets.find(spreadsheet => spreadsheet.id === selectedId);
-    const { isTrue, isFalse, SheetSelection } = require(path.join(appPath, 'public', 'javascript', 'sheetbool.js')); 
-    
-
-    
-    if (selectedSpreadsheet) {
-         
-      fromSheetSelection = true;
-      inRowForm = true; 
-      console.log("is currently in the row form");
-     
-      const spreadsheetId = selectedSpreadsheet.id; // Get the ID from the selected object UNCOMMENT
-      selectedSpreadsheetId = spreadsheetId; // Store the selected spreadsheet ID UNCOMMENT
-      console.log(`Selected Spreadsheet: ${selectedSpreadsheet.name}, ID: ${spreadsheetId}`); //UNCOMMENT
-
-      if(selectedSpreadsheet.name.toLowerCase().includes("parts")) { isTrue(); } else { isFalse(); }
-
-      // Hide the available spreadsheets form
-      document.getElementById('availableSpreadsheets').style.display = 'none';
-      document.getElementById('spreadsheetForm').style.display = 'none'; // Hide the spreadsheet form
-      document.getElementById('footer').style.display = 'none';
-      
-      // Hide the Manage Spreadsheets button
-      document.getElementById('toggleManageButton').style.display = 'none';
-            
-      // Set the height and width of contentBackground based on formContainer's dimensions
-      contentBackground.style.height = '520px';  // Add 'px'
-      contentBackground.style.width = '280px';
-      contentBackground.style.top = '-37%';    // Add 'px'
-
-      // Get the window's height and set the top position of contentBackground
-      const windowHeight = window.innerHeight;
-      contentBackground.style.top = (windowHeight / 2) - (formRect.height);  // Center it vertically
-      //contentBackground.style.top = '-5%';
-      fadeIn(formContainer);
-      document.getElementById('formContainer').style.display = 'flex'; // Show the row form
-        
-      fadeIn(backBtn); 
-
-      // Hide header
-      //document.getElementById('header').style.display = 'none';
-    } else {
-      showNotification('Selected spreadsheet not found.');
+async function setStatus() {
+  const accountStatus = document.getElementById('accountStatus');
+  
+  if (!isSignedIn) {
+    const status = await checkAuthentication();
+    console.log("Status = ", status);
+    if (status != null) {
+      console.log("Account Signed In")
+      accountStatus.innerHTML = 'Account Status: <span style="color: green;">Signed In</span>';
     }
   } else {
-    showNotification('Please select a spreadsheet.');
+    console.log("Account not Signed in")
+    accountStatus.innerHTML = 'Account Status: <span style="color: red;">Not Signed In</span>';
   }
-};
-
-/****************** END DEFAULT PAGE ********************************/
-/****************** START SETTINGS PAGE *****************************/
-
-function showSettingsPage() {
-
-}
-function hideSettingsPage() {
-  settingsPage.style.display = 'none';
 }
 
-document.getElementById('loginBtn').onclick = async function () {
-  console.log("Login button pushed");
-  console.log("Sending /auth request");
+const path = require('path');
+
+// Async function to require modules safely
+(async () => {
+  const appPath = await ipcRenderer.invoke('get-app-path');
+  //const appPath = await window.electronAPI.getAppPath();
+  try {
+    // Require printLogic.js
+    const printLogic = require(path.join(appPath, 'public', 'javascript', 'printLogic.js'));
+    printLabel = printLogic.printLabel;
+  } catch (error) {
+    console.error("Error requiring printLogic.js:", error);
+  }
 
   try {
-    const authUrl = authenticateWithGoogle();  // Authenticate and get the URL
-    console.log('Sending open-auth-window event with URL:', authUrl);
-
-    ipcRenderer.send('open-auth-window', authUrl);  // Send event to open the auth window
-//    window.electronAPI.openAuthWindow(authUrl);  
-
-    // Wait for the authentication callback
-    ipcRenderer.on('oauth-callback', (event, callbackUrl) => {
-    //window.electronAPI.onOAuthCallback((callbackURL) => {  
-      console.log('Received OAuth callback URL:', callbackUrl);
-      // Now you can handle the URL and extract the authorization code if needed
-    });
+    // Require image.js
+    const image = require(path.join(appPath, 'public', 'images', 'image.js'));
+    img64 = image.img64;
   } catch (error) {
-    console.error('Authentication error:', error);
+    console.error("Error requiring image.js:", error);
   }
-};
 
-// Spreadsheet selection handling
-document.getElementById('loadSpreadsheetsButton').onclick = async function () {
-  const access_token = await checkAuthentication();
-  if (access_token) {
-    fetchAvailableSpreadsheets(access_token); // Pass the access token to the fetch function
-  } else {
-    alert('You need to authenticate to fetch spreadsheets.');
+  try {
+    // Require auth.js
+    const auth = require(path.join(appPath, 'public', 'javascript', 'auth.js'));
+    checkAuthentication = auth.checkAuthentication;
+    authenticateWithGoogle = auth.authenticateWithGoogle;
+  } catch (error) {
+    console.error("Error requiring auth.js:", error);
   }
-};
-
-featuresBtn.addEventListener('click', function () {
-  console.log(inRowForm);
-  contentBackground.style.height = '505px';
-  contentBackground.style.width = '450px';
-  contentBackground.style.top = '-38%';
-  border.style.display = 'none';
-  settingsForm.style.display = 'none';  // Hide settings
-  changelogContent.style.display = 'none';  // Show changelog
-
-  fadeIn(featuresContent);
-  
-  fadeIn(backBtn);
-  backBtn.style.display = 'flex';
-  hideSettingsButton.style.display = 'none';
-  featuresBtn.style.display = 'none';
-  //changelogBtn.style.display = 'none';
-  betaText.style.display = 'none';
-
-});
-
-  
-// Add an event listener to the changelog button
-changelogButton.addEventListener('click', function () {
-  // Hide the settings form and show the changelog
-  footer.style.display = 'none';
-  border.style.display = 'none';
-  featuresBtn.style.display = 'none';
-  settingsForm.style.display = 'none'; // Hide settings
-  
-  contentBackground.style.height = '360px';
-  contentBackground.style.width = '500px';
-  contentBackground.style.top = '-63%';
+})();
 
 
-  fadeIn(changelogContent);
-  changelogContent.style.display = 'flex'; // Show changelog
-    
-  fadeIn(changelogBackBtn); 
-  
-  changelogBackBtn.style.display = 'flex';
-  hideSettingsButton.style.display = 'none';
-  changelogButton.style.display = 'none';
-  betaText.style.display = 'none'; 
-});
+// Function to fetch available spreadsheets
+async function fetchAvailableSpreadsheets(access_token) {
+  try {
+    const response = await fetch('/api/spreadsheets', {
+      headers: {
+        Authorization: `Bearer ${access_token}`, // Include the token in the request header
+      },
+    });
 
+    //console.log(response);
+    if (!response.ok) {
+      throw new Error(`HTTP error! Status: ${response.status}`);
+    }
 
-/****************** END SETTINGS PAGE *******************************/
-/****************** START FEATURES PAGE *****************************/
+    const jsonResponse = await response.json();
+    console.log('Fetched data:', jsonResponse); // Log the fetched data
+    spreadsheets = jsonResponse; // Store fetched spreadsheets in the global variable
 
-function showFeaturesPage() {
-  featuresPage.style.display = 'flex';
-}
-function hideFeaturesPage() {
-  featuresPage.style.display = 'none';
-}
+    const dropdown = document.getElementById('spreadsheetSelect');
+    dropdown.innerHTML = ''; // Clear existing options
 
-/****************** END FEATURES PAGE *******************************/
-/****************** START CHANGELOG PAGE ****************************/
-
-function showChangelogPage() {
-  changelogPage.style.display = 'flex';
-}
-function hideChangelogPage() {
-  changelogPage.style.display = 'none';
-}
-
-changelogButton.addEventListener('click', function () {
-  loadChangelog();
-});
-
-changelogBackButton.addEventListener('click', function() { 
-      // Hide the changelog and show the settings form
-      
-      contentBackground.style.height = defaultSettingsPageHeight;
-      contentBackground.style.width = defaultWidth;
-      contentBackground.style.top = '-28%';
-      
-      border.style.display = 'flex';
-       
-
-      fadeIn(changelogBtn);
-      changelogBtn.style.display = 'flex';
-      changelogContent.style.display = 'none';  // Hide changelog
-       
-
-      fadeIn(settingsForm);
-      settingsForm.style.display = 'flex'; // Show settings
-      backBtn.style.display = 'none';  // Hide back button
-      featuresContent.style.display = 'none';
-       
-
-      fadeIn(featuresBtn);
-       
-
-      fadeIn(betaText);
-      betaText.style.display = 'flex';
-       
-
-      fadeIn(hideSettingsButton);
-      hideSettingsButton.style.display = 'flex';
-       
-  });
-
-/****************** END CHANGELOG PAGE ******************************/
-/****************** START FORM PAGE ********************************/
-
-function showRowFormPage() {
-  rowFormPage.style.display = 'flex';
-}
-function hideRowFormPage() {
-  rowFormPage.style.display = 'none';
+    if (Array.isArray(spreadsheets) && spreadsheets.length > 0) {
+      spreadsheets.forEach(spreadsheet => {
+        const option = document.createElement('option');
+        option.value = spreadsheet.id; // Use value attribute for ID
+        option.textContent = spreadsheet.name; // Display name
+        dropdown.appendChild(option);
+      });
+      console.log('Dropdown populated successfully.'); // Log success message
+    } else {
+      console.error('No spreadsheets available or unexpected response format:', jsonResponse);
+      const option = document.createElement('option');
+      option.textContent = 'No spreadsheets available';
+      dropdown.appendChild(option);
+    }
+  } catch (error) {
+    console.error('Error fetching spreadsheets:', error);
+  }
 }
 
 // On form submit, fetch row data
@@ -829,24 +422,12 @@ document.getElementById('rowForm').onsubmit = async (event) => {
   showModal();
 };
 
-featuresFromRowFormBtn.addEventListener('click', function() {
-  inRowForm = true;
-
-  contentBackground.style.width = '500px';
-  
-  openFeatures();
-});
-
-/****************** MODAL PAGE ********************************/
 function showModal() {
-  modal = document.getElementById('modal');
-  modal.style.display = 'block';
-  fadeIn(modal);
-}
 
-// Close modal function
-function closeModal() {
-  fadeOut(modal);
+  const modal = document.getElementById('modal');
+   modal.style.display = 'block';
+  fadeIn(modal);
+
 }
 
 // Function to generate HTML table
@@ -864,7 +445,13 @@ function generateTableHTML(data) {
   table += '</table>';
   return table;
 }
-/*
+
+// Close modal function
+function closeModal() {
+  const modal = document.getElementById('modal');
+  fadeOut(modal);
+}
+
 window.onload = function () {
   closeModal();
   loadSpreadsheetsFromStorage();
@@ -886,9 +473,144 @@ window.onclick = function (event) {
 document.getElementById('printDataButton').onclick = function () {
   printLabel(globalFormattedData);
 };
-*/
 
-/****************** BACK BUTTON FUNCTIONS *********************/
+
+document.getElementById('loginBtn').onclick = async function () {
+  console.log("Login button pushed");
+  console.log("Sending /auth request");
+
+  try {
+    const authUrl = authenticateWithGoogle();  // Authenticate and get the URL
+    console.log('Sending open-auth-window event with URL:', authUrl);
+
+    ipcRenderer.send('open-auth-window', authUrl);  // Send event to open the auth window
+//    window.electronAPI.openAuthWindow(authUrl);  
+
+    // Wait for the authentication callback
+    ipcRenderer.on('oauth-callback', (event, callbackUrl) => {
+    //window.electronAPI.onOAuthCallback((callbackURL) => {  
+      console.log('Received OAuth callback URL:', callbackUrl);
+      // Now you can handle the URL and extract the authorization code if needed
+    });
+  } catch (error) {
+    console.error('Authentication error:', error);
+  }
+};
+
+
+ipcRenderer.on('auth-success', (event, token) => {
+  globalToken = token; // Store the token if needed
+  showNotification('Successfully authenticated with Google!');
+  console.log('OAuth Token:', token);
+});
+
+
+ipcRenderer.on('auth-failure', (event, error) => {
+  showNotification('Authentication failed. Please try again.');
+  console.error('OAuth2 Authentication failed:', error);
+});
+
+// Spreadsheet selection handling
+document.getElementById('addSpreadsheetBtn').onclick = async function () {
+  const access_token = await checkAuthentication();
+  if (access_token) {
+    fetchAvailableSpreadsheets(access_token); // Pass the access token to the fetch function
+  } else {
+    alert('You need to authenticate to fetch spreadsheets.');
+  }
+};
+
+async function UpdateSpreadsheets() {
+  const status = await checkAuthentication();
+  fetchAvailableSpreadsheets(status);
+}
+
+function updateSpreadsheetDropdown() {
+  const dropdown = document.getElementById('spreadsheetSelect');
+  dropdown.innerHTML = '<option value="">Select a spreadsheet</option>';
+
+  for (const name in spreadsheets) {
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name;
+    dropdown.appendChild(option);
+  }
+}
+
+// Load spreadsheets from localStorage
+function loadSpreadsheetsFromStorage() {
+  const storedSpreadsheets = localStorage.getItem('spreadsheets');
+  if (storedSpreadsheets) {
+    spreadsheets = JSON.parse(storedSpreadsheets);
+    updateSpreadsheetDropdown();
+  }
+}
+
+// Event handler for the confirm button
+document.getElementById('confirmSpreadsheetBtn').onclick = async function () {
+  const selectedDropdown = document.getElementById('spreadsheetSelect');
+  const selectedId = selectedDropdown.value; // Get the ID from the dropdown UNCOMMENT
+  const formContainer = document.getElementById('formContainer');
+  const content = document.querySelector('.content');
+  const formRect = content.getBoundingClientRect();
+  const contentBackground = document.getElementById('contentBackground');
+  const appPath = await ipcRenderer.invoke('get-app-path');
+
+  if (selectedId) {
+    console.log('Spreadsheets:', spreadsheets);
+    // Find the spreadsheet object that matches the selected ID
+    const selectedSpreadsheet = spreadsheets.find(spreadsheet => spreadsheet.id === selectedId); //UNCOMMENT
+    const { isTrue, isFalse, SheetSelection } = require(path.join(appPath, 'public', 'javascript', 'sheetbool.js')); // Adjust the path as necessary
+
+    
+    if (selectedSpreadsheet) {
+         
+      fromSheetSelection = true;
+      inRowForm = true; 
+      console.log("is currently in the row form");
+     
+      const spreadsheetId = selectedSpreadsheet.id; // Get the ID from the selected object UNCOMMENT
+      selectedSpreadsheetId = spreadsheetId; // Store the selected spreadsheet ID UNCOMMENT
+      console.log(`Selected Spreadsheet: ${selectedSpreadsheet.name}, ID: ${spreadsheetId}`); //UNCOMMENT
+
+      if(selectedSpreadsheet.name.toLowerCase().includes("parts")) { isTrue(); } else { isFalse(); }
+      if(SheetSelection()) {
+        document.getElementById("dataTitle").innerHTML = ("Parts");
+      } else {
+        document.getElementById("dataTitle").innerHTML = ("Accessories");
+      }
+
+      // Hide the available spreadsheets form
+      document.getElementById('availableSpreadsheets').style.display = 'none';
+      document.getElementById('spreadsheetForm').style.display = 'none'; // Hide the spreadsheet form
+      document.getElementById('footer').style.display = 'none';
+      
+      // Hide the Manage Spreadsheets button
+      document.getElementById('toggleManageButton').style.display = 'none';
+            
+      // Set the height and width of contentBackground based on formContainer's dimensions
+      contentBackground.style.height = '520px';  // Add 'px'
+      contentBackground.style.width = '280px';
+      contentBackground.style.top = '-37%';    // Add 'px'
+
+      // Get the window's height and set the top position of contentBackground
+      const windowHeight = window.innerHeight;
+      contentBackground.style.top = (windowHeight / 2) - (formRect.height); // + (formRect.height / 4)) + 'px';  // Center it vertically
+      //contentBackground.style.top = '-5%';
+      fadeIn(formContainer);
+      document.getElementById('formContainer').style.display = 'flex'; // Show the row form
+        
+      fadeIn(backBtn); 
+
+      // Hide header
+      //document.getElementById('header').style.display = 'none';
+    } else {
+      showNotification('Selected spreadsheet not found.');
+    }
+  } else {
+    showNotification('Please select a spreadsheet.');
+  }
+};
 
 // Back to Spreadsheet Button Click Handler
 document.getElementById('backToSpreadsheetBtn').onclick = function () {
@@ -924,54 +646,349 @@ document.getElementById('backToSpreadsheetBtn').onclick = function () {
 
   // Make sure to update the dropdown with the current spreadsheets
   updateSpreadsheetDropdown();
+
+  
 };
 
-// Add an event listener to the back button
-backBtn.addEventListener('click', function () {
-  if (inRowForm) {
-    document.getElementById('contentBackground');
-    document.getElementById('featuresContent').style.display = 'none';
-    fadeIn(formContainer); // Show the row form
+document.getElementById('toggleManageButton').addEventListener('click', function () {
+//  location.reload();
+  const contentBackground = document.getElementById("contentBackground")
+  const form = document.getElementById('spreadsheetForm');
+  const availableForm = document.getElementById('availableSpreadsheets');
+  const otherSettingsForm = document.getElementById('otherSettings');
+  const featuresBtn = document.getElementById('featuresBtn');
+  const changelogBtn = document.getElementById('changelogBtn');
 
-    contentBackground.style.width = defaultWidth;
-    contentBackground.style.height = '520px';
+  // Determine if the form is currently visible
+  const isFormVisible = window.getComputedStyle(form).display !== 'none';
 
-  }
-      
-  else {
-    // Hide the changelog and show the settings form
-    contentBackground.style.width = defaultWidth;
+
+  // Toggle the visibility of the spreadsheet management form
+  if (!isFormVisible) {
+    console.log("Current form display: ", form.style.display);
+    console.log("Switching to settings");
     contentBackground.style.height = defaultSettingsPageHeight;
     contentBackground.style.top = '-28%';
+    availableForm.style.display = 'none';
+    otherSettingsForm.style.display = 'flex';
+    changelogBtn.style.display = 'flex';// show border
+    featuresBtn.style.display = 'flex';
+    this.textContent = 'Back'; // Update button text
+    fadeIn(form);
+    
 
-    border.style.display = 'flex';
-    changelogContent.style.display = 'none';  // Hide changelog
+    fadeIn(otherSettingsForm);
+    form.style.display = 'flex';
+    otherSettingsForm.style.display = 'flex';
     
-    fadeIn(settingsForm);  // Show settings
-    settingsForm.style.display = 'flex';
-    backBtn.style.display = 'none';  // Hide back button
-    featuresContent.style.display = 'none';
-    hideSettingsButton.style.display = 'flex';
-     
+
+  } else {
+    console.log("Current form display: ", form.style.display);
+    console.log("Switching to default");
+    contentBackground.style.height = defaultFrontPageHeight;
+    contentBackground.style.top = '-40%';
+    otherSettingsForm.style.display = 'none'; // hide border on run
+    form.style.display = 'none'; // Hide the form
+    this.textContent = 'Settings';
+    fadeIn(availableForm);
+    availableForm.style.display = 'flex';
     
-    fadeIn(featuresBtn);
-   // featuresBtn.style.display = 'flex';
-     
-    
-    fadeIn(changelogBtn);
-    //changelogBtn.style.display = 'flex';
-    
-    fadeIn(betaText);
-   // betaText.style.display = 'flex';
-     
-    
-    fadeIn(hideSettingsButton);
-    //hideSettingsButton.style.display = 'flex';
-     
+
   }
 });
 
+document.getElementById('toggleManageButton').addEventListener('click', function () {
+
+    fadeIn(this);
+     
+});
+
+document.getElementById("refreshButton").addEventListener('click', async function(event) {
+  event.preventDefault(); // Prevent the default form submission
+  console.log("Refreshed!");
+//  await isLoggedIn();
+    await UpdateSpreadsheets();
+//    await UpdateAccountStatus();
+});
+
+function showNotification(message, duration = 3000) {
+  const notification = document.getElementById('notification');
+  notification.textContent = message;
+  notification.classList.remove('hidden');
+  notification.classList.add('show');
+
+  setTimeout(() => {
+    notification.classList.remove('show');
+    notification.classList.add('hidden');
+  }, duration);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  // Grab references to elements you'll work with
+  const changelogBtn = document.getElementById('changelogBtn');
+  const border = document.getElementById('otherSettings');
+  const changelogBackBtn = document.getElementById('changelogBackBtn');
+  const backBtn = document.getElementById('backBtn');
+  const settingsForm = document.getElementById('spreadsheetForm');
+  const changelogContent = document.getElementById('changelogContent');
+  const hideSettingsButton = document.getElementById('toggleManageButton');
+  const featuresBtn = document.getElementById('featuresBtn');
+  const featuresFromRowFormBtn = document.getElementById('rowFormFeaturesBtn')
+  const betaText = document.getElementById('footer');
+  const featuresContent = document.getElementById('featuresContent');
+  const contentBackground = document.getElementById('contentBackground');
+  const formContainer = document.getElementById('formContainer');
+
+  // Initially hide the changelog content and back button
+  changelogContent.style.display = 'none';
+  backBtn.style.display = 'none';
+
+  const defaultFrontPageHeight = '340px';
+  const defaultWidth = '280px';
+  const defaultSettingsPageHeight = '490px';
+
+
+  // Add an event listener to the changelog button
+  changelogBtn.addEventListener('click', function () {
+    const footer = document.getElementById('footer');
+
+    // Hide the settings form and show the changelog
+    footer.style.display = 'none';
+    border.style.display = 'none';
+    featuresBtn.style.display = 'none';
+    settingsForm.style.display = 'none'; // Hide settings
+    
+    contentBackground.style.height = '360px';
+    contentBackground.style.width = '500px';
+    contentBackground.style.top = '-63%';
+
+
+    fadeIn(changelogContent);
+    changelogContent.style.display = 'flex'; // Show changelog
+     
+    fadeIn(changelogBackBtn); 
+    
+    changelogBackBtn.style.display = 'flex';
+    hideSettingsButton.style.display = 'none';
+    changelogBtn.style.display = 'none';
+    betaText.style.display = 'none';
+     
+      
+  });
+
+  changelogBackBtn.addEventListener('click', function() { 
+      // Hide the changelog and show the settings form
+      
+      contentBackground.style.height = defaultSettingsPageHeight;
+      contentBackground.style.width = defaultWidth;
+      contentBackground.style.top = '-28%';
+      
+      border.style.display = 'flex';
+       
+
+      fadeIn(changelogBtn);
+      changelogBtn.style.display = 'flex';
+      changelogContent.style.display = 'none';  // Hide changelog
+       
+
+      fadeIn(settingsForm);
+      settingsForm.style.display = 'flex'; // Show settings
+      backBtn.style.display = 'none';  // Hide back button
+      featuresContent.style.display = 'none';
+       
+
+      fadeIn(featuresBtn);
+       
+
+      fadeIn(betaText);
+      betaText.style.display = 'flex';
+       
+
+      fadeIn(hideSettingsButton);
+      hideSettingsButton.style.display = 'flex';
+       
+  });
 
 
 
+
+  // Add an event listener to the back button
+  backBtn.addEventListener('click', function () {
+    if (inRowForm) {
+      document.getElementById('contentBackground');
+      document.getElementById('featuresContent').style.display = 'none';
+      fadeIn(formContainer); // Show the row form
+
+      contentBackground.style.width = defaultWidth;
+      contentBackground.style.height = '520px';
+
+    }
+        
+    else {
+      // Hide the changelog and show the settings form
+      contentBackground.style.width = defaultWidth;
+      contentBackground.style.height = defaultSettingsPageHeight;
+      contentBackground.style.top = '-28%';
+
+      border.style.display = 'flex';
+      changelogContent.style.display = 'none';  // Hide changelog
+      
+      fadeIn(settingsForm);  // Show settings
+      settingsForm.style.display = 'flex';
+      backBtn.style.display = 'none';  // Hide back button
+      featuresContent.style.display = 'none';
+      hideSettingsButton.style.display = 'flex';
+       
+      
+      fadeIn(featuresBtn);
+     // featuresBtn.style.display = 'flex';
+       
+      
+      fadeIn(changelogBtn);
+      //changelogBtn.style.display = 'flex';
+      
+      fadeIn(betaText);
+     // betaText.style.display = 'flex';
+       
+      
+      fadeIn(hideSettingsButton);
+      //hideSettingsButton.style.display = 'flex';
+       
+    }
+  });
+
+  featuresFromRowFormBtn.addEventListener('click', function() {
+    inRowForm = true;
+
+    contentBackground.style.width = '500px';
+    
+    openFeatures();
+  });
+  
+  function openFeatures() {
+    document.getElementById('formContainer').style.display = 'none'; 
+    contentBackground.style.height = '505px';
+    contentBackground.style.width = '450px';
+    settingsForm.style.display = 'none';  // Hide settings
+    changelogContent.style.display = 'none';  // Show changelog
+    fadeIn(featuresContent);
+    fadeIn(backBtn);
+    backBtn.style.display = 'flex';
+    hideSettingsButton.style.display = 'none';
+      changelogBtn.style.display = 'none';
+    betaText.style.display = 'none';
+  }
+
+  featuresBtn.addEventListener('click', function () {
+  console.log(inRowForm);
+      contentBackground.style.height = '505px';
+      contentBackground.style.width = '450px';
+      contentBackground.style.top = '-38%';
+      border.style.display = 'none';
+      settingsForm.style.display = 'none';  // Hide settings
+      changelogContent.style.display = 'none';  // Show changelog
+
+      fadeIn(featuresContent);
+      
+      fadeIn(backBtn);
+      backBtn.style.display = 'flex';
+      hideSettingsButton.style.display = 'none';
+      featuresBtn.style.display = 'none';
+      //changelogBtn.style.display = 'none';
+      betaText.style.display = 'none';
+        
+
+  });
+});
+
+// Function to fetch the changelog JSON and display it
+function loadChangelog() {
+  fetch('changelog.json') // Fetch the JSON file
+      .then(response => {
+          if (!response.ok) {
+              throw new Error('Network response was not ok');
+          }
+          return response.json(); // Parse the JSON
+      })
+      .then(data => {
+          const changelogList = document.getElementById('changelogList');
+          changelogList.innerHTML = ''; // Clear any existing content
+
+          const item = data.changelog[0];
+          const paragraph = document.createElement('p');
+          paragraph.innerHTML = `<strong>Version ${item.version}:</strong> ${item.description}`;
+          changelogList.appendChild(paragraph);
+      })
+      .catch(error => {
+          console.error('Error fetching changelog:', error);
+      });
+}
+// Call the function when the changelog button is clicked
+changelogBtn.addEventListener('click', function () {
+  loadChangelog();
+});
+
+async function ResizeContent() {
+  const background = document.getElementById('contentBackground');
+  const content = document.querySelector('.content');
+  const header = document.getElementById('header');
+  
+  const headerHeight = header.offsetHeight;
+  const headerWidth = header.offsetWidth;
+  const headerX = header.offsetX;
+  const headerY = header.offsetY;
+
+  const contentHeight = content.offsetHeight;
+  const contentWidth = content.offsetWidth;
+  const contentX = content.offsetX;
+  const contentY = content.offsetY;
+
+  const newWidth = 0;
+  const newHeight = 0;
+  const newX = 0;
+  const newY = 0;
+
+  /* SET NEW HEIGHT/WIDTH FOR CONTENT*/
+
+  if (content.offsetWidth < header.offsetWidth) {
+    newWidth = (window.innerWidth / 2)
+                      - (content.offsetWidth)
+                      + 50;
+  } else {
+    newWidth =  (window.innerWidth / 2)
+                - (header.offsetWidth);
+  }
+
+  newHeight = (window.innerHeight / 2)
+              - (contentHeight)
+              - (headerHeight / 2);
+
+
+  /* SET NEW X, Y COORDS FOR CONTENT */
+
+  // Apply the calculated height to the content element
+  background.style.height = newHeight + 'px';
+  background.style.width = newWidth + 'px';
+
+  background.style.transform.translateX 
+}
+
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+window.onload = async function() {
+  const splash = document.getElementById('splash');
+  const background = document.getElementById('splashBackground');
+
+  // Start the animation after a 1-second delay
+  setTimeout(() => {
+      fadeOut(splash); // Trigger the animation
+  }, 1000); // Delay before starting the animation
+
+  // Hide the splash screen after the animation completes (3 seconds)
+  setTimeout(() => {
+      splash.style.display = 'none'; // Hide the splash screen
+  }, 4000); // Total delay (1000ms + 3000ms animation duration) 
+};
 

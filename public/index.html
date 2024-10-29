@@ -12,62 +12,58 @@
 </head>
 
 <body>
-  <section id="background">
+  <div id="background">
     <canvas id="backgroundCanvas">
       <img id="backgroundImage" src="">
     </canvas>
-  </section>
-
-  <section id="header">
+  </div>
+  <div id="header">
     <img id="logoimg" src="images/icon.ico" alt="Logo"> <!-- Placeholder for the logo -->
     <h2>Sheets 2 Dymo</h2>
     <h5>Created By Jamie Willson and Lachie Leedham</h5>
-  </section>
-      
-  <section id = "UtilityContent">
+  </div>
+
+  <div class="content">
     <div id="contentBackground">
       <p></p>
     </div>
     <div id="notification" class="notification hidden"></div>
-  </section>
 
-  <section id="DefaultPage">
-    <form id="availableSpreadsheets">
-      <!-- <h6 id="accountStatus">Account Status: </h6> -->
-      <div id="refreshWrapper">
-        <select id="spreadsheetSelect">
-          <option value="">Select a spreadsheet</option>
-        </select>
-        <button id="refreshButton">
-          <span class="icon">&#x21bb;</span>
-        </button>
-      </div>
-      <button type="button" id="confirmSpreadsheetBtn">Confirm</button>
-    </form>
-  </section>
+    <div id="spreadsheetContainer">
+      <!-- Spreadsheet management form -->
+      <form id="spreadsheetForm">
 
-  <section id="SettingsPage">
-      <div id="login">
-        <button id="loginBtn" class="loginBtn" type="button">Login with Google</button>
-      </div>
+        <div id="login">
+          <button id="loginBtn" class="loginBtn" type="button">Login with Google</button>
+        </div>
 
-      <button type="button" id="loadSpreadsheetsButton">Load Spreadsheets</button>
+        <!-- <label for="spreadsheetId"></label> -->
+
+        <button type="button" id="addSpreadsheetBtn">Load Spreadsheets</button>
+
+      </form>
 
       <div id="otherSettings">
         <button type="button" id="featuresBtn">Functions</button>
         <button type="button" id="changelogBtn">Changelog</button>
       </div>
-  </section>
 
-  <section id="ChangelogPage">
-    <div id="changelogContent" class="hidden">
-      <h1>Changelog</h1>
-      <div id="changelogList"></div> <!-- This will hold the changelog items -->
-      <button id="changelogBackBtn">Back</button>
+      <form id="availableSpreadsheets">
+        <!-- <h6 id="accountStatus">Account Status: </h6> -->
+        <div id="refreshWrapper">
+          <select id="spreadsheetSelect">
+            <option value="">Select a spreadsheet</option>
+          </select>
+          <button id="refreshButton">
+            <span class="icon">&#x21bb;</span>
+          </button>
+        </div>
+        <button type="button" id="confirmSpreadsheetBtn">Confirm</button>
+      </form>
+      <button id="toggleManageButton" class="toggleBtn">Settings</button>
+
     </div>
-  </section>
 
-  <section id="FeaturesPage">
     <div id="featuresContent">
       <h2>Functions and Features</h2>
       <h4>Single Row Fetching</h4> 
@@ -81,15 +77,18 @@
       <p>E.g., "7-10" fetches data from row 7 to 10</p>
       <button id="backBtn">Back</button>
     </div>
-  </section>
 
-  <section id="RowFormPage">
+    <div id="changelogContent" class="hidden">
+      <h1>Changelog</h1>
+      <div id="changelogList"></div> <!-- This will hold the changelog items -->
+      <button id="changelogBackBtn">Back</button>
+    </div>
+
     <!-- Initially hidden row input form -->
     <div id="formContainer" style="display: none;">
-      <h2>Select Data</h2>
+      <h2 id="dataTitle">Select Data</h2>
       <form id="rowForm">
         <label for="month">Select Month:</label>
-
         <select id="month" name="month" required>
           <option value="" disabled selected>Select a month</option>
           <option value="January">January</option>
@@ -104,6 +103,7 @@
           <option value="October">October</option>
           <option value="November">November</option>
           <option value="December">December</option>
+
         </select>
 
         <label for="rowIndex">Row number:</label>
@@ -113,41 +113,41 @@
         <button type="button" id="backToSpreadsheetBtn">Back</button>
       </form>
     </div>
-  </section> 
 
     <!-- Modal for showing data -->
-  <section id="modal">
-    <div id="modalContent">
-      <span class="close">&times;</span>
-      <h2>Google Sheets Data</h2>
-      <pre id="modalData"></pre>
-      <button id="printDataButton">Print Label</button>
+    <div id="modal">
+      <div id="modalContent">
+        <span class="close">&times;</span>
+        <h2>Google Sheets Data</h2>
+        <pre id="modalData"></pre>
+        <button id="printDataButton">Print Label</button>
+      </div>
     </div>
-  </section>
 
-  <section id="labelPreview" style="display: none;">
-    <h5>Label Preview</h5>
-    <div id="labelContent" style="border: 1px solid #000; padding: 10px; width: 200px;">
-      <!-- Populated label content will go here -->
+    <div id="labelPreview" style="display: none;">
+      <h5>Label Preview</h5>
+<!--      <div id="labelContent" style="border: 1px solid #000; padding: 10px; width: 200px;"> -->
+          <div id="labelContent" style="border: 1px solid #000;">
+
+        <!-- Populated label content will go here -->
+      </div>
     </div>
-  </section>
 
-  <section id="footer">
-    <h4>Version 1.0</h4>
-    <button id="reloadBtn" onclick="location.reload()">
-      <span class="icon">&#x21bb;</span>
-    </button>
-  </section>
+    <div id="footer">
+      <h4>Version 1.0</h4>
+      <button id="reloadBtn" onclick="location.reload()">
+        <span class="icon">&#x21bb;</span>
+      </button>
+    </div>
+  </div>
 
-  <section id="splash">
+  <div id="splash">
     <div id="splashBackground"></div>
     <div id ="splashImage">
       <img id="splashImg" src="images/icon.ico" alt="Logo">
     </div>
-  </section>
-  
+  </div>
   <script src="/javascript/script.js"></script>
-
 </body>
 
 </html>
